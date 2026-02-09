@@ -1,0 +1,227 @@
+// Prisma schema for Content Control Tower
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  EDITOR
+  APPROVER
+}
+
+enum ContentStatus {
+  DRAFT
+  GENERATED
+  AWAITING_APPROVAL
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  REJECTED
+}
+
+enum ContentType {
+  WP_POST
+  LINKEDIN_POST
+}
+
+enum PublicationStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  memberships  Membership[]
+  auditLogs    AuditLog[]    @relation("ActorAuditLogs")
+  notifications Notification[]
+}
+
+model Workspace {
+  id          String         @id @default(cuid())
+  name        String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  memberships Membership[]
+  domains     Domain[]
+  contentItems ContentItem[]
+  internalLinks InternalLink[]
+  externalLinks ExternalLink[]
+  auditLogs   AuditLog[]
+  notifications Notification[]
+}
+
+model Membership {
+  id          String    @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        Role
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([userId, workspaceId])
+  @@index([workspaceId])
+}
+
+model Domain {
+  id                 String    @id @default(cuid())
+  workspaceId        String
+  name               String
+  siteUrl            String
+  wpUsername         String
+  wpAppPasswordEnc   String
+  wpAppPasswordIv    String
+  wpAppPasswordTag   String
+  lastSitemapFetchAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  workspace          Workspace @relation(fields: [workspaceId], references: [id])
+  internalLinks      InternalLink[]
+  contentItems       ContentItem[]
+
+  @@index([workspaceId])
+}
+
+model InternalLink {
+  id          String   @id @default(cuid())
+  workspaceId String
+  domainId    String?
+  url         String
+  createdAt   DateTime @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  domain      Domain?   @relation(fields: [domainId], references: [id])
+
+  @@index([workspaceId])
+}
+
+model ExternalLink {
+  id          String   @id @default(cuid())
+  workspaceId String
+  url         String
+  label       String?
+  createdAt   DateTime @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+}
+
+model ContentItem {
+  id             String         @id @default(cuid())
+  workspaceId    String
+  domainId       String?
+  type           ContentType
+  status         ContentStatus
+  topic          String
+  mainKeyword    String
+  createdById    String
+  approvedById   String?
+  scheduledFor   DateTime?
+  publishedAt    DateTime?
+  wpPostId       Int?
+  wpUrl          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  workspace      Workspace      @relation(fields: [workspaceId], references: [id])
+  domain         Domain?        @relation(fields: [domainId], references: [id])
+  createdBy      User           @relation(fields: [createdById], references: [id])
+  approvedBy     User?          @relation(fields: [approvedById], references: [id])
+  versions       ContentVersion[]
+
+  @@index([workspaceId])
+  @@index([domainId])
+}
+
+model ContentVersion {
+  id                    String   @id @default(cuid())
+  contentItemId         String
+  version               Int
+  title                 String
+  outline               String
+  body                  String
+  metaTitle             String
+  metaDescription       String
+  suggestedInternalLinks String[]
+  suggestedExternalLinks String[]
+  createdAt             DateTime @default(now())
+
+  contentItem           ContentItem @relation(fields: [contentItemId], references: [id])
+
+  @@unique([contentItemId, version])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String
+  workspaceId String
+  entityType  String
+  entityId    String
+  action      String
+  before      Json?
+  after       Json?
+  createdAt   DateTime @default(now())
+
+  actor       User     @relation("ActorAuditLogs", fields: [actorUserId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  message     String
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([workspaceId])
+}
+
+model MediaAsset {
+  id          String   @id @default(cuid())
+  workspaceId String
+  url         String
+  title       String?
+  createdAt   DateTime @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+}
+
+model PublicationJob {
+  id            String            @id @default(cuid())
+  workspaceId   String
+  contentItemId String
+  status        PublicationStatus @default(PENDING)
+  runAt         DateTime?
+  createdAt     DateTime          @default(now())
+
+  workspace     Workspace @relation(fields: [workspaceId], references: [id])
+  contentItem   ContentItem @relation(fields: [contentItemId], references: [id])
+
+  @@index([workspaceId])
+}
