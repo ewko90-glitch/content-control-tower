@@ -673,3 +673,7 @@ curl -X POST \
 - [ ] Sekcja "Stan integracji" pokazuje poprawne liczniki
 - [ ] Puste stany i onboarding działają (X==0 i X>0)
 - [ ] Link do /sites działa
+- [ ] Zakładki AI i Zaawansowane są widoczne i czytelne
+- [ ] Wszystkie sekcje są informacyjne (brak mutacji)
+- [ ] "Wkrótce" jest jednoznacznie oznaczone
+- [ ] Ton i język spójne z całym systemem
