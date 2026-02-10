@@ -660,3 +660,6 @@ curl -X POST \
 - [ ] Widoczny licznik miejsc X/Y i soft-lock CTA przy limicie
 - [ ] Modal usuwania ma potwierdzenie oraz blokady dla self/owner
 - [ ] Sekcja Zaproszenia jest widoczna jako "Wkrótce" i wygląda wiarygodnie
+- [ ] Role i dostęp pokazują 4 role z opisami i uprawnieniami
+- [ ] Brak akcji edycyjnych (tylko informacyjne)
+- [ ] Sekcja "Wkrótce" jest wyraźnie oznaczona
