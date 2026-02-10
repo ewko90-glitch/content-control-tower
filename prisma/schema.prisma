@@ -38,42 +38,46 @@ enum PublicationStatus {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
+  id           String   @id @default(cuid())
+  email        String   @unique
   name         String?
   passwordHash String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  memberships  Membership[]
-  auditLogs    AuditLog[]    @relation("ActorAuditLogs")
-  notifications Notification[]
+  memberships     Membership[]
+  auditLogs       AuditLog[]     @relation("ActorAuditLogs")
+  notifications   Notification[]
+  contentCreated  ContentItem[]  @relation("ContentCreatedBy")
+  contentApproved ContentItem[]  @relation("ContentApprovedBy")
 }
 
 model Workspace {
-  id          String         @id @default(cuid())
-  name        String
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  memberships Membership[]
-  domains     Domain[]
-  contentItems ContentItem[]
-  internalLinks InternalLink[]
-  externalLinks ExternalLink[]
-  auditLogs   AuditLog[]
-  notifications Notification[]
+  memberships     Membership[]
+  domains         Domain[]
+  contentItems    ContentItem[]
+  internalLinks   InternalLink[]
+  externalLinks   ExternalLink[]
+  auditLogs       AuditLog[]
+  notifications   Notification[]
+  mediaAssets     MediaAsset[]     @relation("WorkspaceMediaAssets")
+  publicationJobs PublicationJob[] @relation("WorkspacePublicationJobs")
 }
 
 model Membership {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   userId      String
   workspaceId String
   role        Role
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime @default(now())
 
-  user        User      @relation(fields: [userId], references: [id])
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 
   @@unique([userId, workspaceId])
   @@index([workspaceId])
@@ -92,9 +96,9 @@ model Domain {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  workspace          Workspace @relation(fields: [workspaceId], references: [id])
-  internalLinks      InternalLink[]
-  contentItems       ContentItem[]
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id])
+  internalLinks InternalLink[]
+  contentItems  ContentItem[]
 
   @@index([workspaceId])
 }
@@ -106,8 +110,8 @@ model InternalLink {
   url         String
   createdAt   DateTime @default(now())
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
-  domain      Domain?   @relation(fields: [domainId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  domain    Domain?   @relation(fields: [domainId], references: [id])
 
   @@index([workspaceId])
 }
@@ -119,52 +123,56 @@ model ExternalLink {
   label       String?
   createdAt   DateTime @default(now())
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 
   @@index([workspaceId])
 }
 
 model ContentItem {
-  id             String         @id @default(cuid())
-  workspaceId    String
-  domainId       String?
-  type           ContentType
-  status         ContentStatus
-  topic          String
-  mainKeyword    String
-  createdById    String
-  approvedById   String?
-  scheduledFor   DateTime?
-  publishedAt    DateTime?
-  wpPostId       Int?
-  wpUrl          String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id           String        @id @default(cuid())
+  workspaceId  String
+  domainId     String?
+  type         ContentType
+  status       ContentStatus
+  topic        String
+  mainKeyword  String
+  createdById  String
+  approvedById String?
+  scheduledFor DateTime?
+  publishedAt  DateTime?
+  wpPostId     Int?
+  wpUrl        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  workspace      Workspace      @relation(fields: [workspaceId], references: [id])
-  domain         Domain?        @relation(fields: [domainId], references: [id])
-  createdBy      User           @relation(fields: [createdById], references: [id])
-  approvedBy     User?          @relation(fields: [approvedById], references: [id])
-  versions       ContentVersion[]
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  domain    Domain?   @relation(fields: [domainId], references: [id])
+
+  createdBy  User  @relation("ContentCreatedBy", fields: [createdById], references: [id])
+  approvedBy User? @relation("ContentApprovedBy", fields: [approvedById], references: [id])
+
+  publicationJobs PublicationJob[] @relation("ContentItemPublicationJobs")
+
+  versions ContentVersion[]
 
   @@index([workspaceId])
   @@index([domainId])
 }
 
 model ContentVersion {
-  id                    String   @id @default(cuid())
-  contentItemId         String
-  version               Int
-  title                 String
-  outline               String
-  body                  String
-  metaTitle             String
-  metaDescription       String
+  id                     String   @id @default(cuid())
+  contentItemId          String
+  version                Int
+  title                  String
+  outline                String
+  body                   String
+  metaTitle              String
+  metaDescription        String
   suggestedInternalLinks String[]
   suggestedExternalLinks String[]
-  createdAt             DateTime @default(now())
+  createdAt              DateTime @default(now())
 
-  contentItem           ContentItem @relation(fields: [contentItemId], references: [id])
+  contentItem ContentItem @relation(fields: [contentItemId], references: [id])
 
   @@unique([contentItemId, version])
 }
@@ -180,22 +188,22 @@ model AuditLog {
   after       Json?
   createdAt   DateTime @default(now())
 
-  actor       User     @relation("ActorAuditLogs", fields: [actorUserId], references: [id])
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  actor     User      @relation("ActorAuditLogs", fields: [actorUserId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 
   @@index([workspaceId])
 }
 
 model Notification {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   workspaceId String
   userId      String
   message     String
   readAt      DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
 
   @@index([workspaceId])
 }
@@ -207,7 +215,7 @@ model MediaAsset {
   title       String?
   createdAt   DateTime @default(now())
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  workspace Workspace @relation("WorkspaceMediaAssets", fields: [workspaceId], references: [id])
 
   @@index([workspaceId])
 }
@@ -220,8 +228,8 @@ model PublicationJob {
   runAt         DateTime?
   createdAt     DateTime          @default(now())
 
-  workspace     Workspace @relation(fields: [workspaceId], references: [id])
-  contentItem   ContentItem @relation(fields: [contentItemId], references: [id])
+  workspace   Workspace   @relation("WorkspacePublicationJobs", fields: [workspaceId], references: [id])
+  contentItem ContentItem @relation("ContentItemPublicationJobs", fields: [contentItemId], references: [id])
 
   @@index([workspaceId])
 }
