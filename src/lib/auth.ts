@@ -26,6 +26,15 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        // DEV-ONLY: allow logging in as owner@demo.local without password when not in production
+        // TODO: remove this bypass or secure it for non-dev environments
+        if (process.env.NODE_ENV !== "production" && credentials?.email === "owner@demo.local") {
+          const devUser = await prisma.user.findUnique({ where: { email: "owner@demo.local" } });
+          if (devUser) {
+            return { id: devUser.id, email: devUser.email, name: devUser.name ?? undefined };
+          }
+        }
+
         const parsed = credentialsSchema.safeParse(credentials);
         if (!parsed.success) {
           return null;
@@ -46,15 +55,36 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
+      // On sign-in, enrich token with user info from DB (role, workspaceId)
       if (user) {
         token.sub = user.id;
+        token.email = user.email;
+        try {
+          const membership = await prisma.membership.findFirst({
+            where: { userId: user.id },
+            orderBy: { createdAt: "desc" }
+          });
+          if (membership) {
+            token.role = membership.role;
+            token.workspaceId = membership.workspaceId;
+          }
+        } catch (e) {
+          // swallow DB errors in JWT callback
+          console.error("jwt callback membership lookup failed", e);
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (token.sub) {
-        session.user.id = token.sub;
+        session.user.id = token.sub as string;
       }
+      if (token.email) {
+        session.user.email = token.email as string;
+      }
+      // attach role and workspaceId for convenience in server code
+      (session.user as any).role = token.role ?? (session.user as any).role;
+      (session.user as any).workspaceId = token.workspaceId ?? (session.user as any).workspaceId;
       return session;
     }
   }
