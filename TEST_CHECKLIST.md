@@ -656,3 +656,7 @@ curl -X POST \
 - [ ] Ogólne pokazuje nazwę i ID workspace oraz działa "Kopiuj ID"
 - [ ] Liczniki pokazują członków, strony, domeny i treści (jeśli są)
 - [ ] "Stan projektu" reaguje na brak danych i pokazuje właściwe CTA
+- [ ] Zespół renderuje listę członków (name/email) i role po polsku
+- [ ] Widoczny licznik miejsc X/Y i soft-lock CTA przy limicie
+- [ ] Modal usuwania ma potwierdzenie oraz blokady dla self/owner
+- [ ] Sekcja Zaproszenia jest widoczna jako "Wkrótce" i wygląda wiarygodnie
