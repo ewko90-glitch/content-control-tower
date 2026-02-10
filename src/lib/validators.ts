@@ -20,6 +20,16 @@ export const inviteSchema = z.object({
   role: z.enum(["OWNER", "EDITOR", "APPROVER"])
 });
 
+// Simple domain schema for basic CRUD (name, slug, description)
+export const createDomainSchema = z.object({
+  name: z.string().min(2).max(100),
+  slug: z.string().min(2).max(100).regex(/^[a-z0-9_-]+$/, "Identyfikator może zawierać tylko małe litery, cyfry, myślniki i podkreślenia"),
+  description: z.string().max(500).optional()
+});
+
+export const updateDomainSchema = createDomainSchema;
+
+// Legacy WordPress domain schema (kept for backward compatibility with existing WP features)
 export const domainSchema = z.object({
   name: z.string().min(2),
   siteUrl: z.string().url(),

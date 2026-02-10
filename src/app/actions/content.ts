@@ -218,6 +218,9 @@ export async function publishContent(contentId: string, mode: "draft" | "future"
   if (!item.domain) {
     return { success: false, message: "Content nie ma przypisanej domeny." };
   }
+  if (!item.domain.siteUrl || !item.domain.wpUsername || !item.domain.wpAppPasswordEnc || !item.domain.wpAppPasswordIv || !item.domain.wpAppPasswordTag) {
+    return { success: false, message: "Domena nie ma skonfigurowanych danych WordPress." };
+  }
   const latest = item.versions[0];
   if (!latest) {
     return { success: false, message: "Brak wygenerowanej wersji." };
@@ -225,12 +228,12 @@ export async function publishContent(contentId: string, mode: "draft" | "future"
   try {
     const response = await publishWordPressPost({
       creds: {
-        siteUrl: item.domain.siteUrl,
-        username: item.domain.wpUsername,
+        siteUrl: item.domain.siteUrl as string,
+        username: item.domain.wpUsername as string,
         appPassword: {
-          ciphertext: item.domain.wpAppPasswordEnc,
-          iv: item.domain.wpAppPasswordIv,
-          tag: item.domain.wpAppPasswordTag
+          ciphertext: item.domain.wpAppPasswordEnc as string,
+          iv: item.domain.wpAppPasswordIv as string,
+          tag: item.domain.wpAppPasswordTag as string
         }
       },
       title: latest.title,

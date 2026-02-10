@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 
-const initialState = { success: false };
+const initialState = { success: false, message: "" };
 
 export default function RegisterPage() {
   const [state, formAction] = useFormState(registerUser, initialState);

@@ -1,63 +1,51 @@
-import { prisma } from "@/lib/db";
+import Link from "next/link";
 import { requireWorkspace } from "@/lib/guards";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
-
-function getWeekStart(date: Date) {
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(date);
-  monday.setDate(diff);
-  monday.setHours(0, 0, 0, 0);
-  return monday.toISOString().slice(0, 10);
-}
+import { Button } from "@/components/ui/button";
 
 export default async function CalendarPage() {
-  const { workspaceId } = await requireWorkspace();
-  const items = await prisma.contentItem.findMany({
-    where: { workspaceId },
-    orderBy: { createdAt: "desc" }
-  });
-  const grouped = items.reduce<Record<string, typeof items>>((acc, item) => {
-    const key = getWeekStart(item.scheduledFor ?? item.createdAt);
-    acc[key] = acc[key] ?? [];
-    acc[key].push(item);
-    return acc;
-  }, {});
+  await requireWorkspace();
 
   return (
     <AppShell>
-      <Card>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold">Content Calendar (weekly)</h2>
-          <div className="flex gap-2">
-            <Select defaultValue="all">
-              <option value="all">Workspace: all</option>
-            </Select>
-            <Select defaultValue="all">
-              <option value="all">Domain: all</option>
-            </Select>
-            <Select defaultValue="all">
-              <option value="all">Status: all</option>
-            </Select>
-          </div>
+      <div className="grid gap-6">
+        <div className="mb-4">
+          <h1 className="text-3xl font-bold text-gray-900">Kalendarz</h1>
+          <p className="mt-2 text-gray-600">Plan publikacji i widok temporalny treści</p>
         </div>
-        <div className="mt-6 grid gap-4">
-          {Object.entries(grouped).map(([week, weekItems]) => (
-            <div key={week} className="rounded-md border border-gray-200 p-4">
-              <p className="text-sm font-semibold">Tydzień od {week}</p>
-              <ul className="mt-2 space-y-2">
-                {weekItems.map((item) => (
-                  <li key={item.id} className="text-sm text-gray-700">
-                    {item.topic} • {item.type} • {item.status}
-                  </li>
-                ))}
-              </ul>
+
+        <Card>
+          <div className="py-12 text-center">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-purple-100">
+              <svg className="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
             </div>
-          ))}
-        </div>
-      </Card>
+            <h2 className="mt-6 text-2xl font-semibold text-gray-900">Kalendarz — w budowie</h2>
+            <p className="mt-2 text-gray-600">
+              Ten moduł jest w przygotowaniu. Wkrótce będziesz mógł tutaj planować publikacje na osi czasu.
+            </p>
+            <p className="mt-4 text-sm text-gray-500">
+              W tym miejscu pojawią się widok tygodniowy, miesięczny i planowanie publikacji z automatycznym
+              rozkładem treści.
+            </p>
+            <div className="mt-8 flex gap-3">
+              <Link href="/overview">
+                <Button variant="secondary">Wróć do Przeglądu</Button>
+              </Link>
+              <Link href="/domains">
+                <Button variant="ghost">Przejdź do Domen</Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      </div>
     </AppShell>
   );
 }

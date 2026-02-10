@@ -1,170 +1,94 @@
 import { PrismaClient, Role, ContentType, ContentStatus, PublicationStatus } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
-async function main() {
-  // Deterministic IDs for demo data
-  const workspaceId = "ws_demo";
-  const userId = "user_demo";
-  const membershipId = "membership_demo";
-  const domainId = "domain_demo";
-  const contentItemId = "content_demo";
-  const publicationJobId = "pubjob_demo";
-
-  const workspace = await prisma.workspace.upsert({
-    where: { id: workspaceId },
-    update: {},
-    create: {
-      id: workspaceId,
-      name: "Demo Workspace",
-    },
-  });
-
-  const user = await prisma.user.upsert({
-    where: { email: "owner@demo.local" },
-    update: { name: "Demo Owner" },
-    create: {
-      id: userId,
-      email: "owner@demo.local",
-      name: "Demo Owner",
-      passwordHash: "mock-password-hash",
-    },
-  });
-
-  await prisma.membership.upsert({
-    where: { id: membershipId },
-    update: {},
-    create: {
-      id: membershipId,
-      userId: user.id,
-      workspaceId: workspace.id,
-      role: Role.OWNER,
-    },
-  });
-
-  const domain = await prisma.domain.upsert({
-    where: { id: domainId },
-    update: {},
-    create: {
-      id: domainId,
-      workspaceId: workspace.id,
-      name: "demo.local",
-      siteUrl: "https://demo.local",
-      wpUsername: "demo",
-      wpAppPasswordEnc: "enc",
-      wpAppPasswordIv: "iv",
-      wpAppPasswordTag: "tag",
-    },
-  });
-
-  const contentItem = await prisma.contentItem.upsert({
-    where: { id: contentItemId },
-    update: {},
-    create: {
-      id: contentItemId,
-      workspaceId: workspace.id,
-      domainId: domain.id,
-      type: ContentType.WP_POST,
-      status: ContentStatus.DRAFT,
-      topic: "Demo Topic",
-      mainKeyword: "demo",
-      createdById: user.id,
-    },
-  });
-
-  await prisma.publicationJob.upsert({
-    where: { id: publicationJobId },
-    update: {},
-    create: {
-      id: publicationJobId,
-      workspaceId: workspace.id,
-      contentItemId: contentItem.id,
-      status: PublicationStatus.PENDING,
-    },
-  });
-
-  console.log("Seed completed:", {
-    workspace: workspace.id,
-    user: user.email,
-    domain: domain.name,
-    contentItem: contentItem.id,
-  });
-}
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
-import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/password";
 import { encryptSecret } from "../src/lib/encryption";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const passwordHash = await hashPassword("Password123!");
+  // Demo user
   const user = await prisma.user.upsert({
-    where: { email: "owner@example.com" },
+    where: { email: "owner@demo.local" },
     update: {},
     create: {
-      email: "owner@example.com",
-      name: "Owner Demo",
-      passwordHash
+      email: "owner@demo.local",
+      name: "Demo Owner",
+      passwordHash: "mock-password-hash"
     }
   });
 
-  const workspace = await prisma.workspace.create({
-    data: {
-      name: "Demo Workspace",
-      memberships: {
-        create: {
-          userId: user.id,
-          role: "OWNER"
-        }
+  // Demo workspace
+  const workspace = await prisma.workspace.upsert({
+    where: { id: "ws_demo" },
+    update: {},
+    create: {
+      id: "ws_demo",
+      name: "Demo Workspace"
+    }
+  });
+
+  // Membership
+  await prisma.membership.upsert({
+    where: {
+      userId_workspaceId: {
+        userId: user.id,
+        workspaceId: workspace.id
       }
-    }
-  });
-
-  const encrypted = encryptSecret("demo-app-password");
-  await prisma.domain.create({
-    data: {
+    },
+    update: {},
+    create: {
+      userId: user.id,
       workspaceId: workspace.id,
-      name: "Demo WP",
-      siteUrl: "https://example.com",
-      wpUsername: "demo-user",
-      wpAppPasswordEnc: encrypted.ciphertext,
-      wpAppPasswordIv: encrypted.iv,
-      wpAppPasswordTag: encrypted.tag
+      role: Role.OWNER
     }
   });
 
-  await prisma.externalLink.createMany({
-    data: [
-      { workspaceId: workspace.id, url: "https://developer.mozilla.org", label: "MDN" },
-      { workspaceId: workspace.id, url: "https://nextjs.org", label: "Next.js" },
-      { workspaceId: workspace.id, url: "https://wordpress.org", label: "WordPress" }
-    ]
-  });
-
-  await prisma.contentItem.create({
-    data: {
-      workspaceId: workspace.id,
-      type: "WP_POST",
-      status: "DRAFT",
-      topic: "Content Marketing 101",
-      mainKeyword: "content marketing",
-      createdById: user.id
+  // Example domains with new slug field
+  const domains = [
+    {
+      name: "Główna marka",
+      slug: "glowna-marka",
+      description: "Zawiera treści dotyczące głównej marki firmy"
+    },
+    {
+      name: "Produkt Premium",
+      slug: "produkt-premium",
+      description: "Dedykowana linia produktów premium"
+    },
+    {
+      name: "Kampania sezonu",
+      slug: "kampania-sezonu",
+      description: "Kampania marketingowa na ten sezon"
     }
+  ];
+
+  for (const domainData of domains) {
+    await prisma.domain.upsert({
+      where: {
+        workspaceId_slug: {
+          workspaceId: workspace.id,
+          slug: domainData.slug
+        }
+      },
+      update: {},
+      create: {
+        workspaceId: workspace.id,
+        name: domainData.name,
+        slug: domainData.slug,
+        description: domainData.description
+      }
+    });
+  }
+
+  console.log("Seed completed:", {
+    workspace: workspace.name,
+    user: user.email,
+    domains: domains.length
   });
 }
 
 main()
-  .catch((error) => {
-    console.error(error);
+  .catch((e) => {
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {

@@ -1,6 +1,8 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireRole } from "@/lib/guards";
 import { workspaceSchema, inviteSchema } from "@/lib/validators";
@@ -42,6 +44,8 @@ export async function createWorkspace(_: WorkspaceState, formData: FormData): Pr
     userId: user.id,
     message: `Workspace ${workspace.name} utworzony.`
   });
+  revalidatePath("/", "layout");
+  redirect("/overview");
   return { success: true };
 }
 
@@ -59,6 +63,8 @@ export async function switchWorkspace(workspaceId: string) {
     throw new Error("Brak dostępu do workspace.");
   }
   cookies().set("workspaceId", workspaceId, { httpOnly: true, sameSite: "lax" });
+  revalidatePath("/", "layout");
+  redirect("/overview");
 }
 
 export async function inviteUser(_: WorkspaceState, formData: FormData): Promise<WorkspaceState> {
@@ -98,4 +104,13 @@ export async function inviteUser(_: WorkspaceState, formData: FormData): Promise
     message: `Dodano Cię do workspace jako ${parsed.data.role}.`
   });
   return { success: true };
+}
+
+// Wrapper functions for direct form actions (without state parameter)
+export async function createWorkspaceAction(formData: FormData): Promise<void> {
+  await createWorkspace({ success: false }, formData);
+}
+
+export async function inviteUserAction(formData: FormData): Promise<void> {
+  await inviteUser({ success: false }, formData);
 }

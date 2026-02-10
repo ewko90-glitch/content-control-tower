@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, getActiveWorkspaceId } from "@/lib/guards";
-import { createWorkspace, inviteUser, switchWorkspace } from "@/app/actions/workspaces";
+import { switchWorkspace, createWorkspaceAction, inviteUserAction } from "@/app/actions/workspaces";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ export default async function WorkspacesPage() {
 
         <Card>
           <h2 className="text-lg font-semibold">Utwórz nowy workspace</h2>
-          <form action={createWorkspace} className="mt-4 flex gap-2">
+          <form action={createWorkspaceAction} className="mt-4 flex gap-2">
             <Input name="name" placeholder="Nazwa" required />
             <Button type="submit">Dodaj</Button>
           </form>
@@ -46,7 +46,7 @@ export default async function WorkspacesPage() {
         {activeMembership?.role === "OWNER" && (
           <Card>
             <h2 className="text-lg font-semibold">Zaproś użytkownika</h2>
-            <form action={inviteUser} className="mt-4 grid gap-2 md:grid-cols-3">
+            <form action={inviteUserAction} className="mt-4 grid gap-2 md:grid-cols-3">
               <Input name="email" type="email" placeholder="Email" required />
               <Select name="role">
                 <option value="EDITOR">EDITOR</option>

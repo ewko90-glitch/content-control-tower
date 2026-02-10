@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 export type AuditAction =
   | "create"
   | "update"
+  | "delete"
   | "status_change"
   | "approve"
   | "reject"
