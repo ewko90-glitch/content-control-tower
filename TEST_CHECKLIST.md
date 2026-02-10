@@ -677,3 +677,8 @@ curl -X POST \
 - [ ] Wszystkie sekcje są informacyjne (brak mutacji)
 - [ ] "Wkrótce" jest jednoznacznie oznaczone
 - [ ] Ton i język spójne z całym systemem
+- [ ] Overview pokazuje priorytet dnia
+- [ ] Action cards reagują na dane
+- [ ] Status projektu zmienia się logicznie
+- [ ] Health Score liczy się poprawnie
+- [ ] Timeline pokazuje publikacje
