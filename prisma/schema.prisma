@@ -60,8 +60,8 @@ model User {
   auditLogs    AuditLog[]    @relation("ActorAuditLogs")
   notifications Notification[]
   contentCreated  ContentItem[] @relation("ContentCreatedBy")
-contentApproved ContentItem[] @relation("ContentApprovedBy")
-
+  contentApproved ContentItem[] @relation("ContentApprovedBy")
+  contentAssigned ContentItem[] @relation("ContentAssignedTo")
 }
 
 model Workspace {
@@ -74,6 +74,7 @@ model Workspace {
   domains     Domain[]
   sites       Site[]
   contentItems ContentItem[]
+  contentTemplates ContentTemplate[]
   internalLinks InternalLink[]
   externalLinks ExternalLink[]
   auditLogs   AuditLog[]
@@ -179,6 +180,8 @@ model ContentItem {
   mainKeyword    String
   createdById    String
   approvedById   String?
+  assignedToId   String?
+  templateId     String?
   scheduledFor   DateTime?
   publishedAt    DateTime?
   wpPostId       Int?
@@ -187,17 +190,18 @@ model ContentItem {
   updatedAt      DateTime       @updatedAt
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
-domain      Domain?   @relation(fields: [domainId], references: [id])
-
-createdBy   User      @relation("ContentCreatedBy", fields: [createdById], references: [id])
-approvedBy  User?     @relation("ContentApprovedBy", fields: [approvedById], references: [id])
+  domain      Domain?   @relation(fields: [domainId], references: [id])
+  createdBy   User      @relation("ContentCreatedBy", fields: [createdById], references: [id])
+  approvedBy  User?     @relation("ContentApprovedBy", fields: [approvedById], references: [id])
+  assignedTo  User?     @relation("ContentAssignedTo", fields: [assignedToId], references: [id])
+  template    ContentTemplate? @relation(fields: [templateId], references: [id])
 
   publicationJobs PublicationJob[] @relation("ContentItemPublicationJobs")
-
   versions       ContentVersion[]
 
   @@index([workspaceId])
   @@index([domainId])
+  @@index([assignedToId])
 }
 
 model ContentVersion {
@@ -216,6 +220,27 @@ model ContentVersion {
   contentItem           ContentItem @relation(fields: [contentItemId], references: [id])
 
   @@unique([contentItemId, version])
+}
+
+model ContentTemplate {
+  id          String    @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  topic       String
+  mainKeyword String
+  type        ContentType
+  outline     String?
+  body        String?
+  metaTitle   String?
+  metaDescription String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  contentItems ContentItem[]
+
+  @@index([workspaceId])
 }
 
 model AuditLog {

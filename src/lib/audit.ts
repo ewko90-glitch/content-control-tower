@@ -8,7 +8,8 @@ export type AuditAction =
   | "approve"
   | "reject"
   | "schedule"
-  | "publish_attempt";
+  | "publish_attempt"
+  | "assignment";
 
 export async function logAudit(params: {
   actorUserId: string;

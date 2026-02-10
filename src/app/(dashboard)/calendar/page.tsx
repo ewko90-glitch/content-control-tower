@@ -1,50 +1,158 @@
-import Link from "next/link";
+import { prisma } from "@/lib/db";
 import { requireWorkspace } from "@/lib/guards";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { CalendarGrid } from "@/components/calendar-grid";
 
 export default async function CalendarPage() {
-  await requireWorkspace();
+  const { workspaceId } = await requireWorkspace();
+
+  // Fetch all scheduled content for next 90 days
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const ninetyDaysAhead = new Date(today);
+  ninetyDaysAhead.setDate(ninetyDaysAhead.getDate() + 90);
+
+  const scheduledItems = await prisma.contentItem.findMany({
+    where: {
+      workspaceId,
+      status: "SCHEDULED",
+      scheduledFor: {
+        gte: today,
+        lte: ninetyDaysAhead
+      }
+    },
+    include: {
+      createdBy: { select: { name: true, email: true } }
+    },
+    orderBy: { scheduledFor: "asc" }
+  });
+
+  // Group by date
+  const eventsByDate: Record<string, typeof scheduledItems> = {};
+  scheduledItems.forEach((item) => {
+    const dateKey = item.scheduledFor?.toISOString().split("T")[0] || "";
+    if (!eventsByDate[dateKey]) {
+      eventsByDate[dateKey] = [];
+    }
+    eventsByDate[dateKey].push(item);
+  });
 
   return (
     <AppShell>
-      <div className="grid gap-6">
-        <div className="mb-4">
-          <h1 className="text-3xl font-bold text-gray-900">Kalendarz</h1>
-          <p className="mt-2 text-gray-600">Plan publikacji i widok temporalny treści</p>
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Kalendarz publikacji</h1>
+          <p className="mt-2 text-base text-gray-600">
+            Przegląd zaplanowanych publikacji na najbliższe 90 dni.
+          </p>
         </div>
 
-        <Card>
-          <div className="py-12 text-center">
-            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-purple-100">
-              <svg className="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
+        {/* Calendar Grid */}
+        <CalendarGrid
+          events={scheduledItems.map((item) => ({
+            id: item.id,
+            title: item.topic,
+            date: item.scheduledFor!,
+            type: item.type,
+            author: item.createdBy?.name || "Nieznany",
+            keyword: item.mainKeyword
+          }))}
+        />
+
+        {/* Upcoming Events List */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900">Zbliżające się publikacje</h2>
+
+          {scheduledItems.length === 0 ? (
+            <Card className="p-8 text-center text-gray-500">
+              Brak zaplanowanych publikacji w najbliższych 90 dniach.
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {scheduledItems.slice(0, 10).map((item) => (
+                <Card
+                  key={item.id}
+                  className="p-4 flex items-start justify-between hover:shadow-md transition"
+                >
+                  <div className="min-w-0 flex-1">
+                    <a
+                      href={`/content/${item.id}`}
+                      className="text-sm font-semibold text-blue-600 hover:underline line-clamp-1"
+                    >
+                      {item.topic}
+                    </a>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+                        {item.type}
+                      </span>
+                      <span className="text-xs text-gray-600">
+                        {item.createdBy?.name}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ml-4 text-right flex-shrink-0">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {item.scheduledFor?.toLocaleDateString("pl-PL", {
+                        month: "short",
+                        day: "numeric"
+                      })}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {item.scheduledFor?.toLocaleTimeString("pl-PL", {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
+                    </p>
+                  </div>
+                </Card>
+              ))}
             </div>
-            <h2 className="mt-6 text-2xl font-semibold text-gray-900">Kalendarz — w budowie</h2>
-            <p className="mt-2 text-gray-600">
-              Ten moduł jest w przygotowaniu. Wkrótce będziesz mógł tutaj planować publikacje na osi czasu.
+          )}
+        </div>
+
+        {/* Stats */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="p-4">
+            <p className="text-xs text-gray-600 uppercase font-semibold">Razem zaplanowanych</p>
+            <p className="mt-2 text-2xl font-bold text-gray-900">
+              {scheduledItems.length}
             </p>
-            <p className="mt-4 text-sm text-gray-500">
-              W tym miejscu pojawią się widok tygodniowy, miesięczny i planowanie publikacji z automatycznym
-              rozkładem treści.
+          </Card>
+          <Card className="p-4">
+            <p className="text-xs text-gray-600 uppercase font-semibold">Ta niedziela</p>
+            <p className="mt-2 text-2xl font-bold text-gray-900">
+              {
+                scheduledItems.filter((item) => {
+                  const itemDate = new Date(item.scheduledFor!);
+                  const nextSunday = new Date(today);
+                  nextSunday.setDate(
+                    nextSunday.getDate() + ((0 - nextSunday.getDay() + 7) % 7 || 7)
+                  );
+                  const nextMonday = new Date(nextSunday);
+                  nextMonday.setDate(nextMonday.getDate() + 1);
+
+                  return itemDate >= nextSunday && itemDate < nextMonday;
+                }).length
+              }
             </p>
-            <div className="mt-8 flex gap-3">
-              <Link href="/overview">
-                <Button variant="secondary">Wróć do Przeglądu</Button>
-              </Link>
-              <Link href="/domains">
-                <Button variant="ghost">Przejdź do Domen</Button>
-              </Link>
-            </div>
-          </div>
-        </Card>
+          </Card>
+          <Card className="p-4">
+            <p className="text-xs text-gray-600 uppercase font-semibold">Ten tydzień</p>
+            <p className="mt-2 text-2xl font-bold text-gray-900">
+              {
+                scheduledItems.filter((item) => {
+                  const itemDate = new Date(item.scheduledFor!);
+                  const weekEnd = new Date(today);
+                  weekEnd.setDate(weekEnd.getDate() + 7);
+                  return itemDate >= today && itemDate < weekEnd;
+                }).length
+              }
+            </p>
+          </Card>
+        </div>
       </div>
     </AppShell>
   );

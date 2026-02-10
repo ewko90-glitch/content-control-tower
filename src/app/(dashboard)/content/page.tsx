@@ -4,7 +4,7 @@ import { requireWorkspace } from "@/lib/guards";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ContentKanban } from "@/components/content-kanban";
+import { ContentKanbanDraggable } from "@/components/content-kanban-draggable";
 import { ContentList } from "@/components/content-list";
 import { ContentPowerBar } from "@/components/content-power-bar";
 
@@ -187,7 +187,7 @@ export default async function ContentPage({
             userRole={membership.role}
           />
         ) : (
-          <ContentKanban
+          <ContentKanbanDraggable
             items={transformedItems}
             currentUserId={user.id}
             userRole={membership.role}
