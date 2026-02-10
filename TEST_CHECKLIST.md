@@ -668,3 +668,8 @@ curl -X POST \
 - [ ] Soft-lock komunikaty są czytelne
 - [ ] Sekcja pakietów pokazuje 4 plany + wyróżnia "Popularny"
 - [ ] "Rocznie" jest domyślne i promowane
+- [ ] Strony pokazują listę, typy, status i stan integracji
+- [ ] Licznik X/Y działa i blokuje dodawanie po limicie
+- [ ] Sekcja "Stan integracji" pokazuje poprawne liczniki
+- [ ] Puste stany i onboarding działają (X==0 i X>0)
+- [ ] Link do /sites działa
