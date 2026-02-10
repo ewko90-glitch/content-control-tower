@@ -653,3 +653,6 @@ curl -X POST \
 ## Ustawienia projektu - Test Checklist
 
 - [ ] Nawigacja po /settings/project/* działa, layout jest spójny, brak błędów TS
+- [ ] Ogólne pokazuje nazwę i ID workspace oraz działa "Kopiuj ID"
+- [ ] Liczniki pokazują członków, strony, domeny i treści (jeśli są)
+- [ ] "Stan projektu" reaguje na brak danych i pokazuje właściwe CTA
