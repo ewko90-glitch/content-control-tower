@@ -663,3 +663,8 @@ curl -X POST \
 - [ ] Role i dostęp pokazują 4 role z opisami i uprawnieniami
 - [ ] Brak akcji edycyjnych (tylko informacyjne)
 - [ ] Sekcja "Wkrótce" jest wyraźnie oznaczona
+- [ ] Plan i limity pokazują plan i rozliczenie (domyślnie roczne)
+- [ ] Usage pokazuje X/Y dla users/sites/domains
+- [ ] Soft-lock komunikaty są czytelne
+- [ ] Sekcja pakietów pokazuje 4 plany + wyróżnia "Popularny"
+- [ ] "Rocznie" jest domyślne i promowane

@@ -1,8 +1,30 @@
-export default function ProjectPlanPage() {
+import { prisma } from "@/lib/db";
+import { requireWorkspace } from "@/lib/guards";
+import { getLimitsPlaceholder, getPlanPlaceholder } from "@/lib/plan-placeholder";
+import { PlanAndLimits } from "@/components/plan-and-limits";
+
+export default async function ProjectPlanPage() {
+  const { workspaceId } = await requireWorkspace();
+
+  const [membersCount, sitesCount, domainsCount, contentCount] = await Promise.all([
+    prisma.membership.count({ where: { workspaceId } }),
+    prisma.site.count({ where: { workspaceId } }),
+    prisma.domain.count({ where: { workspaceId } }),
+    prisma.contentItem.count({ where: { workspaceId } })
+  ]);
+
+  const { planKey, billingCycle } = getPlanPlaceholder();
+  const limits = getLimitsPlaceholder(planKey);
+
   return (
-    <div className="space-y-2">
-      <h2 className="text-lg font-semibold text-gray-900">Plan i limity</h2>
-      <p className="text-sm text-gray-600">W trakcie budowy (MVP).</p>
-    </div>
+    <PlanAndLimits
+      planKey={planKey}
+      defaultCycle={billingCycle}
+      limits={limits}
+      membersCount={membersCount}
+      sitesCount={sitesCount}
+      domainsCount={domainsCount}
+      contentCount={contentCount}
+    />
   );
 }
