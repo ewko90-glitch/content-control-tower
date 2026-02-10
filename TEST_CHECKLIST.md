@@ -647,3 +647,9 @@ curl -X POST \
 - [ ] Page loads with 10+ sites
 - [ ] Search instant (client-side)
 - [ ] No console errors
+
+---
+
+## Ustawienia projektu - Test Checklist
+
+- [ ] Nawigacja po /settings/project/* działa, layout jest spójny, brak błędów TS

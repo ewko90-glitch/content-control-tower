@@ -11,6 +11,7 @@ const navItems = [
   { href: "/sites", label: "Strony" },
   { href: "/content", label: "Treści" },
   { href: "/calendar", label: "Kalendarz" },
+  { href: "/settings/project", label: "Ustawienia projektu" },
   { href: "/inbox", label: "Do sprawdzenia" }
 ];
 
@@ -39,7 +40,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
               <p className="text-lg font-semibold">Content Control Tower</p>
               <p className="text-xs text-gray-500">Workspace: {workspaceName}</p>
             </div>
-            {workspaceId && <WorkspaceSwitcher currentWorkspaceId={workspaceId} currentWorkspaceName={workspaceName} />}
+            {workspaceId && <WorkspaceSwitcher currentWorkspaceId={workspaceId} />}
           </div>
           <nav className="flex gap-4 text-sm">
             {navItems.map((item) => (
