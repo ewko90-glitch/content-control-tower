@@ -12,11 +12,9 @@ type Membership = {
 };
 
 export function WorkspaceSwitcher({
-  currentWorkspaceId,
-  currentWorkspaceName
+  currentWorkspaceId
 }: {
   currentWorkspaceId: string;
-  currentWorkspaceName: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [workspaces, setWorkspaces] = useState<Membership[]>([]);

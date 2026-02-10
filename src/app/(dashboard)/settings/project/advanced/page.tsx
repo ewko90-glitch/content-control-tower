@@ -42,12 +42,15 @@ export default function ProjectAdvancedPage() {
             <li>Administrator ma wgląd w historię zmian.</li>
             <li>Przygotowane pod Enterprise i audyty wewnętrzne.</li>
           </ul>
-          <button
-            disabled
-            className="rounded-md border border-dashed border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-400"
-          >
-            Zobacz logi audytu
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              disabled
+              className="rounded-md border border-dashed border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-400"
+            >
+              Zobacz logi audytu
+            </button>
+            <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-600">Wkrótce</span>
+          </div>
         </Card>
 
         <Card className="space-y-3">
@@ -78,12 +81,15 @@ export default function ProjectAdvancedPage() {
             <li>Transfer projektu między organizacjami.</li>
             <li>Archiwizacja i przywracanie projektu.</li>
           </ul>
-          <button
-            disabled
-            className="rounded-md border border-dashed border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-400"
-          >
-            Zarządzaj projektem
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              disabled
+              className="rounded-md border border-dashed border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-400"
+            >
+              Zarządzaj projektem
+            </button>
+            <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-600">Wkrótce</span>
+          </div>
         </Card>
       </div>
     </div>

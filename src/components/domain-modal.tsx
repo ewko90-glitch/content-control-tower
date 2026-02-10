@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import type { Domain } from "@prisma/client";
 import { DomainForm } from "./domain-form";
-import { addDomain, editDomain } from "@/app/actions/domains";
+import { addDomain, editDomain, type DomainState } from "@/app/actions/domains";
 
 type Props = {
   domain?: Domain | null;
@@ -24,7 +24,7 @@ export function DomainModal({ domain, isOpen, onClose, onSuccess }: Props) {
 
   // Bind editDomain with domainId for edit mode
   const action = isEdit
-    ? (state: any, formData: FormData) => editDomain(domain!.id, state, formData)
+    ? (state: DomainState, formData: FormData) => editDomain(domain!.id, state, formData)
     : addDomain;
 
   return (

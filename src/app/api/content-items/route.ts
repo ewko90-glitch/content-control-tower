@@ -1,15 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import type { ContentType, ContentStatus } from "@prisma/client";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const workspaceId = (session.user as any).workspaceId;
+    const workspaceId = (session.user as { workspaceId?: string }).workspaceId;
     if (!workspaceId) {
       return NextResponse.json({ error: "workspaceId missing on session" }, { status: 401 });
     }
@@ -32,21 +33,21 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const workspaceId = (session.user as any).workspaceId;
+    const workspaceId = (session.user as { workspaceId?: string }).workspaceId;
     if (!workspaceId) {
       return NextResponse.json({ error: "workspaceId missing on session" }, { status: 401 });
     }
 
 
     const body = await req.json();
-    const { domainId, type, topic, mainKeyword, createdById, status } = body;
-    const resolvedCreatedById = createdById ?? (session.user as any).id;
+    const { domainId, type, topic, mainKeyword, createdById, status } = body as { domainId?: string; type: string; topic: string; mainKeyword: string; createdById?: string; status?: string };
+    const resolvedCreatedById = createdById ?? (session.user as { id?: string }).id;
     if (!type || !topic || !mainKeyword || !resolvedCreatedById) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
@@ -55,8 +56,8 @@ export async function POST(req: Request) {
       data: {
         workspaceId,
         domainId: domainId ?? null,
-        type,
-        status: status ?? "DRAFT",
+        type: type as ContentType,
+        status: (status ?? "DRAFT") as ContentStatus,
         topic,
         mainKeyword,
         createdById: resolvedCreatedById,

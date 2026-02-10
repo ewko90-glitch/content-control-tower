@@ -48,7 +48,7 @@ export function DomainsPageClient({ initialDomains }: Props) {
     window.location.reload();
   };
 
-  if (domains.length === 0) {
+  if (initialDomains.length === 0) {
     return (
       <div className="py-12 text-center">
         <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">

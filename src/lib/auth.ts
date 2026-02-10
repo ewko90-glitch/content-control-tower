@@ -83,8 +83,10 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email as string;
       }
       // attach role and workspaceId for convenience in server code
-      (session.user as any).role = token.role ?? (session.user as any).role;
-      (session.user as any).workspaceId = token.workspaceId ?? (session.user as any).workspaceId;
+      const role = typeof token.role === 'string' ? token.role : undefined;
+      const workspaceId = typeof token.workspaceId === 'string' ? token.workspaceId : undefined;
+      (session.user as { role?: string; workspaceId?: string }).role = role ?? (session.user as { role?: string; workspaceId?: string }).role;
+      (session.user as { role?: string; workspaceId?: string }).workspaceId = workspaceId ?? (session.user as { role?: string; workspaceId?: string }).workspaceId;
       return session;
     }
   }

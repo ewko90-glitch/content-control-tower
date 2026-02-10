@@ -12,7 +12,7 @@ export async function PATCH(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const workspaceId = (session.user as any).workspaceId;
+    const workspaceId = (session.user as { workspaceId?: string }).workspaceId;
     if (!workspaceId) {
       return NextResponse.json({ error: "workspaceId missing on session" }, { status: 401 });
     }

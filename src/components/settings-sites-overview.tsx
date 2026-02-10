@@ -252,12 +252,13 @@ export function SettingsSitesOverview({
             <li>3. Utwórz pierwszą treść i zaplanuj publikację.</li>
           </ol>
           <div className="flex flex-wrap items-center gap-2">
-            <Link href="/sites">
-              <Button>Dodaj stronę</Button>
-            </Link>
+            <Button onClick={handleScrollToQuickAdd}>Dodaj stronę teraz</Button>
             <Button disabled variant="secondary">
               Zobacz przykładową konfigurację
             </Button>
+            <Link href="/sites" className="text-sm text-blue-600 hover:text-blue-700">
+              Otwórz moduł Strony
+            </Link>
           </div>
         </Card>
       ) : needsConfig > 0 ? (
@@ -357,22 +358,21 @@ export function SettingsSitesOverview({
                       </span>
                     </td>
                     <td className="px-3 py-3 text-right">
-                      <div className="flex flex-wrap justify-end gap-2">
-                        {site.integrationStatus === "needs_config" && site.type !== "OTHER" && (
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          {site.integrationStatus === "needs_config" && site.type !== "OTHER" && (
+                            <Link href="/sites" className="text-xs text-blue-600 hover:text-blue-700">
+                              Konfiguruj
+                            </Link>
+                          )}
                           <Link href="/sites" className="text-xs text-blue-600 hover:text-blue-700">
-                            Konfiguruj
+                            Edytuj
                           </Link>
-                        )}
-                        <Link href="/sites" className="text-xs text-blue-600 hover:text-blue-700">
-                          Edytuj
-                        </Link>
-                        <CopyUrlButton value={site.baseUrl} className="text-xs" />
-                        <Button disabled variant="ghost" className="text-xs">
-                          Usuń
-                        </Button>
-                        <Button disabled variant="ghost" className="text-xs">
-                          Aktywuj lub dezaktywuj
-                        </Button>
+                          <CopyUrlButton value={site.baseUrl} className="text-xs" />
+                        </div>
+                        <div className="text-[11px] text-gray-400">
+                          Usuń · Aktywuj/Dezaktywuj (wkrótce)
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -468,8 +468,8 @@ export function SettingsSitesOverview({
           </div>
           <ul className="space-y-2 text-sm text-gray-600">
             <li>Błędny adres strony (base URL) - sprawdź https://</li>
-            <li>Brak danych integracji - publikacja automatyczna będzie zablokowana</li>
-            <li>Token lub hasło wygasło - odśwież dane w konfiguracji</li>
+            <li>Brak danych integracji - publikacja automatyczna będzie zablokowana.</li>
+            <li>Token lub hasło wygasło - odśwież dane w konfiguracji.</li>
           </ul>
         </Card>
       </div>

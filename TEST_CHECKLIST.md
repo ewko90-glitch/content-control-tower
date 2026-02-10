@@ -682,3 +682,81 @@ curl -X POST \
 - [ ] Status projektu zmienia się logicznie
 - [ ] Health Score liczy się poprawnie
 - [ ] Timeline pokazuje publikacje
+
+---
+
+## Treści - Content Workflow Machine
+
+- [ ] /content renderuje się bez błędów i pokazuje header "Treści"
+- [ ] Power bar ma: search input, view switch (Kanban/Lista), filtry (Typ, Status), CTA "Dodaj treść", licznik treści
+- [ ] View switch przełącza między Kanban i Lista bez przeładowania
+- [ ] Filtry działają (Status, Typ) i zmieniają URL z query params
+- [ ] Search filtruje po temacie i słowie kluczowym (case-insensitive)
+- [ ] Empty state pokazuje 3 kroki i CTA "Dodaj pierwszą treść"
+
+### Kanban View
+- [ ] 6 kolumn: Szkice, Do zatwierdzenia, Zatwierdzone, Zaplanowane, Opublikowane, Odrzucone
+- [ ] Każda kolumna pokazuje badge z licznikiem
+- [ ] Puste kolumny pokazują helpful message, np. "Brak treści do zatwierdzenia — dobry znak."
+- [ ] Karty treści pokazują: temat, typ, status badge, słowo kluczowe, autora, (opcjonalnie datę)
+- [ ] Na karcie Awaiting_Approval: buttony "Zatwierdź" i "Odrzuć"
+- [ ] Na karcie Approved: button "Zaplanuj publikację"
+- [ ] Na karcie Rejected: link "Napraw i wyślij"
+- [ ] Button "Odrzuć" wymaga komentarza w prompt (walidacja)
+- [ ] Button "Zaplanuj" wymaga daty/czasu w prompt (walidacja)
+- [ ] Akcje zapisują się w DB i reflektują w UI (optymistycznie)
+
+### List View
+- [ ] Tabela z kolumnami: Temat, Typ, Status, Autor, Termin, Ostatnia zmiana
+- [ ] Checkboxy na każdym wierszu dla bulk actions
+- [ ] "Zaznaczono: X" bar pojawia się u dołu gdy są zaznaczone wiersze
+- [ ] Bulk actions: "Zatwierdź zaznaczone", "Przenieś do szkiców"
+- [ ] Bulk action buttons są disabled dla EDITOR
+- [ ] Zaznaczenie ALL checkbox zaznacza wszystkie wiersze
+
+### /content/[id] - Szczegóły treści
+- [ ] Strona ładuje się ze szczegółami treści (meta, wersja, historia)
+- [ ] Status badge pokazuje aktualny status
+- [ ] Meta section pokazuje: Typ, Słowo kluczowe, Autor, Status, Data planowania
+- [ ] Ostatnia wersja pokazuje: title, meta-title, meta-desc, outline, body
+- [ ] Historia zmian pokazuje ostatnie 10 wpisów AuditLog
+- [ ] Historia pokazuje: kto, co zrobił, kiedy, komentarz (jeśli odrzucenie)
+- [ ] Decision Panel (sidebar): Zatwierdź/Odrzuć (dla Awaiting_Approval, APPROVER/OWNER)
+- [ ] Odrzucenie wymaga komentarza i zapisuje go w AuditLog.after.comment
+- [ ] Decision Panel: Zaplanuj publikację (dla Approved, OWNER/APPROVER)
+- [ ] Zaplanowanie zmienia status na SCHEDULED i ustawia scheduledFor
+
+### /content/new - Dodawanie treści
+- [ ] Formularz ma pola: Temat, Typ, Główne słowo kluczowe (wszystkie wymagane)
+- [ ] Typ ma opcje: "Post WordPress", "Post LinkedIn"
+- [ ] Submit button wyłączony dla nie-EDITOR
+- [ ] Po utworzeniu: redirect do /content, toast "Treść dodana"
+- [ ] Nowa treść pojawia się w kolumnie "Szkice"
+- [ ] Autor jest automatycznie ustawiony na currentUserId
+
+### Workflow + Rola
+- [ ] EDITOR: może tworzyć, wysyłać do zatwierdzenia, reset rejected do draft
+- [ ] EDITOR: NIE może approve/reject/schedule
+- [ ] APPROVER: może approve, reject, schedule
+- [ ] APPROVER: NIE może create/reset
+- [ ] OWNER: może wszystko (super role)
+- [ ] Niedozwolone akcje: button disabled + tooltip/alert z powodem
+
+### Blockers Panel
+- [ ] Jeśli są treści do zatwierdzenia: "Treści czekające na decyzję: X"
+- [ ] Jeśli strony nie skonfigurowane: "Strony wymagające konfiguracji: Y"
+- [ ] Każdy blocker ma link do rozwiązania (content filter / settings/sites)
+
+### Server Actions + Audit
+- [ ] createContent: tworzy item w DB, loguje do AuditLog (action: "create")
+- [ ] updateContentStatus: waliduje workflow transition, loguje (before/after)
+- [ ] approveContent: ustawia approvedById, loguje  (action: "approve")
+- [ ] rejectContent: wymaga comment, ustawia status REJECTED, loguje z comment w after
+- [ ] Jeśli akcja niedozwolona: zwraca {success: false, message: "...po polsku"}
+- [ ] Wszystkie akcje workspace-scoped (nie fajują user na innym workspace)
+
+### Edge Cases
+- [ ] Brak treści: empty state jest czytelny i ma CTA
+- [ ] Jeśli nie ma stron: "Ryzyko publikacji" badge na scheduled treści
+- [ ] Draft + GENERATED trafiają do kolumny "Szkice"
+- [ ] Workflow maszyna: nie można approve przejść bezpośrednio z Draft (musi być Awaiting_Approval)

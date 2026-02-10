@@ -20,6 +20,7 @@ type SettingsProjectShellProps = {
 
 export function SettingsProjectShell({ children }: SettingsProjectShellProps) {
   const pathname = usePathname();
+  const activeTab = tabs.find((tab) => tab.href === pathname);
 
   return (
     <div className="space-y-6">
@@ -28,6 +29,12 @@ export function SettingsProjectShell({ children }: SettingsProjectShellProps) {
         <p className="mt-1 text-sm text-gray-600">
           Zarządzaj konfiguracją projektu, dostępami i kluczowymi ustawieniami.
         </p>
+        {activeTab && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">Sekcja</span>
+            <span className="font-medium text-gray-700">{activeTab.label}</span>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">

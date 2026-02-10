@@ -97,8 +97,8 @@ export function PlanAndLimits({
         helper:
           membersCount < limits.seats
             ? `Możesz dodać jeszcze ${seatsRemaining} osób.`
-            : "Osiągnięto limit miejsc w tym planie.",
-        cta: "Dokup miejsce",
+            : "Osiągnięto limit miejsc. Dodawanie nowych osób jest zablokowane. Zwiększ limit w wyższym planie.",
+        cta: membersCount < limits.seats ? "Dokup miejsce" : "Zwiększ limit",
         note: "W przyszłości: dokupienie miejsca bez zmiany planu.",
         status:
           membersCount >= limits.seats
@@ -112,8 +112,11 @@ export function PlanAndLimits({
         label: "Strony do publikacji",
         used: sitesCount,
         limit: limits.sites,
-        helper: "Każda strona to osobne miejsce publikacji (WordPress, Shopify itd.).",
-        cta: sitesCount === 0 ? "Dodaj pierwszą stronę" : "Zwiększ limit",
+        helper:
+          sitesCount < limits.sites
+            ? `Pozostało ${sitesRemaining} miejsc publikacji. Każda strona to osobne miejsce.`
+            : "Osiągnięto limit miejsc publikacji. Dodawanie nowych stron jest zablokowane. Zwiększ limit w wyższym planie.",
+        cta: sitesCount === 0 ? "Dodaj pierwszą stronę" : sitesCount >= limits.sites ? "Zwiększ limit" : "Dokup miejsce",
         status:
           sitesCount >= limits.sites
             ? "limit"
@@ -126,8 +129,11 @@ export function PlanAndLimits({
         label: "Domeny",
         used: domainsCount,
         limit: limits.domains,
-        helper: "Domeny pomagają porządkować content i SEO.",
-        cta: domainsCount === 0 ? "Dodaj domenę" : "Zwiększ limit",
+        helper:
+          domainsCount < limits.domains
+            ? `Pozostało ${domainsRemaining} domen. Domeny pomagają porządkować content i SEO.`
+            : "Osiągnięto limit domen. Dodawanie nowych domen jest zablokowane. Zwiększ limit w wyższym planie.",
+        cta: domainsCount === 0 ? "Dodaj domenę" : domainsCount >= limits.domains ? "Zwiększ limit" : "Dokup miejsce",
         status:
           domainsCount >= limits.domains
             ? "limit"
@@ -140,7 +146,7 @@ export function PlanAndLimits({
         label: "AI",
         used: 0,
         limit: 1,
-        helper: "AI będzie wspierać: generowanie treści, kontrolę jakości i rekomendacje.",
+        helper: "Niedostępne w tym planie. AI będzie wspierać generowanie treści i kontrolę jakości.",
         cta: "Odblokuj w wyższym planie",
         status: "locked",
         disabled: true,
@@ -155,7 +161,7 @@ export function PlanAndLimits({
         <div>
           <h2 className="text-2xl font-semibold text-gray-900">Plan i limity</h2>
           <p className="mt-1 text-sm text-gray-600">
-            Kontroluj zasoby projektu i w razie potrzeby rozwiń plan – bez blokowania dostępu do danych.
+            Kontroluj zasoby projektu i rozwijaj plan bez ryzyka utraty danych.
           </p>
         </div>
         <div className="flex flex-col items-end gap-2 text-right">
@@ -167,7 +173,7 @@ export function PlanAndLimits({
               Rozliczenie: {cycleLabel}
             </span>
           </div>
-          <p className="text-xs text-gray-500">Rocznie = lepsza cena.</p>
+          <p className="text-xs text-gray-500">Rocznie to najlepsza wartość.</p>
         </div>
       </div>
 
@@ -175,7 +181,7 @@ export function PlanAndLimits({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="text-base font-semibold text-gray-900">Okres rozliczenia</h3>
-            <p className="text-sm text-gray-600">Wybierz sposób rozliczeń, aby zobaczyć komunikację planu.</p>
+            <p className="text-sm text-gray-600">Przełącz, aby zobaczyć komunikację cen i wartości.</p>
           </div>
           <div className="flex items-center gap-2 rounded-full bg-gray-100 p-1 text-sm">
             <button
@@ -219,20 +225,20 @@ export function PlanAndLimits({
 
         <div>
           <p className="text-xs font-semibold uppercase text-gray-500">W skrócie</p>
-          <ul className="mt-2 space-y-2 text-sm text-gray-700">
-            <li className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
-              {limits.seats} miejsc w zespole
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
-              {limits.sites} stron do publikacji
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
-              {limits.domains} domen dla treści i SEO
-            </li>
-          </ul>
+          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
+              <p className="text-xs text-gray-500">Miejsca w zespole</p>
+              <p className="text-lg font-semibold text-gray-900">{limits.seats}</p>
+            </div>
+            <div className="rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
+              <p className="text-xs text-gray-500">Strony do publikacji</p>
+              <p className="text-lg font-semibold text-gray-900">{limits.sites}</p>
+            </div>
+            <div className="sm:col-span-2 rounded-md border border-gray-100 bg-white px-3 py-2">
+              <p className="text-xs text-gray-500">Domeny dla treści i SEO</p>
+              <p className="text-sm font-medium text-gray-700">{limits.domains}</p>
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 border-t pt-4">
@@ -262,7 +268,7 @@ export function PlanAndLimits({
                 : row.status === "warning"
                   ? "Blisko limitu"
                   : row.status === "locked"
-                    ? "Niedostępne"
+                    ? "Wkrótce"
                     : "OK";
             const statusClass =
               row.status === "limit"
@@ -347,6 +353,7 @@ export function PlanAndLimits({
           <div>
             <h3 className="text-base font-semibold text-gray-900">Pakiety</h3>
             <p className="text-sm text-gray-600">Porównaj możliwości i wybierz plan dopasowany do zespołu.</p>
+            <p className="text-xs text-gray-500">Wybrany okres: {cycleLabel}. Najlepsza wartość przy rozliczeniu rocznym.</p>
           </div>
           <div className="flex items-center gap-2 rounded-full bg-gray-100 p-1 text-sm">
             <button
@@ -375,7 +382,12 @@ export function PlanAndLimits({
 
         <div className="grid gap-4 lg:grid-cols-4">
           {PLAN_CARDS.map((plan) => (
-            <Card key={plan.key} className="space-y-4">
+            <Card
+              key={plan.key}
+              className={`space-y-4 ${
+                plan.badge ? "border-blue-200 bg-blue-50/40" : ""
+              }`}
+            >
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h4 className="text-base font-semibold text-gray-900">{PLAN_LABELS[plan.key]}</h4>
@@ -396,7 +408,7 @@ export function PlanAndLimits({
               </div>
 
               <div className="rounded-md border border-dashed border-gray-200 bg-gray-50 p-3 text-xs text-gray-500">
-                <p>Funkcje premium są wyszarzone i dostępne w wyższych planach.</p>
+                <p>Funkcje premium są dostępne w wyższych planach.</p>
               </div>
 
               <Button disabled className="w-full text-xs">

@@ -282,3 +282,123 @@ export async function getContentCalendar() {
   });
   return items;
 }
+
+/**
+ * Generic status update with workflow validation
+ */
+export async function updateContentStatus(
+  contentId: string,
+  nextStatus: "DRAFT" | "AWAITING_APPROVAL" | "APPROVED" | "SCHEDULED" | "PUBLISHED" | "REJECTED",
+  payload?: { comment?: string; scheduledFor?: string }
+): Promise<ContentState> {
+  const { user, workspaceId, membership } = await requireWorkspace();
+  const userRole = membership.role;
+
+  const item = await prisma.contentItem.findFirst({
+    where: { id: contentId, workspaceId }
+  });
+
+  if (!item) {
+    return { success: false, message: "Nie znaleziono treści." };
+  }
+
+  // Import workflow validation
+  const { canTransition } = await import("@/lib/workflow");
+  const { allowed, reason } = canTransition(
+    item.status as any,
+    nextStatus,
+    userRole,
+    item.createdById === user.id
+  );
+
+  if (!allowed) {
+    return { success: false, message: reason || "Akcja niedozwolona." };
+  }
+
+  // Validate required data
+  if (nextStatus === "REJECTED" && !payload?.comment) {
+    return { success: false, message: "Wymagany komentarz przy odrzuceniu." };
+  }
+
+  if (nextStatus === "SCHEDULED" && !payload?.scheduledFor) {
+    return { success: false, message: "Wymagana data przy planowaniu." };
+  }
+
+  try {
+    const updateData: any = { status: nextStatus };
+
+    if (nextStatus === "APPROVED") {
+      updateData.approvedById = user.id;
+    }
+
+    if (nextStatus === "SCHEDULED" && payload?.scheduledFor) {
+      updateData.scheduledFor = new Date(payload.scheduledFor);
+    }
+
+    const updated = await prisma.contentItem.update({
+      where: { id: item.id },
+      data: updateData
+    });
+
+    await logAudit({
+      actorUserId: user.id,
+      workspaceId,
+      entityType: "ContentItem",
+      entityId: item.id,
+      action: "status_change",
+      before: { status: item.status },
+      after: {
+        status: updated.status,
+        ...(payload?.comment && { comment: payload.comment }),
+        ...(updated.scheduledFor && { scheduledFor: updated.scheduledFor })
+      }
+    });
+
+    revalidatePath("/content");
+    return { success: true, message: `Status zmieniony na: ${nextStatus}` };
+  } catch (error) {
+    return { success: false, message: (error as Error).message };
+  }
+}
+
+/**
+ * Reset rejected content back to draft
+ */
+export async function resetToDraft(contentId: string): Promise<ContentState> {
+  const { user, workspaceId, membership } = await requireWorkspace();
+
+  const item = await prisma.contentItem.findFirst({
+    where: { id: contentId, workspaceId }
+  });
+
+  if (!item) {
+    return { success: false, message: "Nie znaleziono treści." };
+  }
+
+  if (item.status !== "REJECTED") {
+    return { success: false, message: "Tylko odrzucone treści można przywrócić." };
+  }
+
+  // Only OWNER or AUTHOR can reset to draft
+  if (membership.role !== "OWNER" && item.createdById !== user.id) {
+    return { success: false, message: "Brak uprawnień." };
+  }
+
+  const updated = await prisma.contentItem.update({
+    where: { id: item.id },
+    data: { status: "DRAFT" }
+  });
+
+  await logAudit({
+    actorUserId: user.id,
+    workspaceId,
+    entityType: "ContentItem",
+    entityId: item.id,
+    action: "status_change",
+    before: { status: item.status },
+    after: { status: updated.status, reason: "Przywrócono do szkicu" }
+  });
+
+  revalidatePath("/content");
+  return { success: true, message: "Treść przywrócona do szkicu." };
+}
