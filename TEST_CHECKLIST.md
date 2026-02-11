@@ -1,5 +1,7 @@
 # Inbox Checks
 
+- Smoke test: login + authed API + inbox protected
+
 ## Checklist
 
 - Inbox: operational inbox shows only actionable items
