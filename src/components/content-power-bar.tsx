@@ -51,18 +51,7 @@ export function ContentPowerBar({
     router.push(`/content?${params.toString()}`);
   };
 
-  const getStatusLabel = () => {
-    const labels: Record<string, string> = {
-      all: "Wszystkie statusy",
-      DRAFT: "Szkice",
-      AWAITING_APPROVAL: "Do zatwierdzenia",
-      APPROVED: "Zatwierdzone",
-      SCHEDULED: "Zaplanowane",
-      PUBLISHED: "Opublikowane",
-      REJECTED: "Odrzucone"
-    };
-    return labels[statusFilter] || statusFilter;
-  };
+  // Status label helper intentionally removed (unused) to satisfy lint rules
 
   return (
     <div className="flex flex-col gap-4 lg:gap-3 lg:flex-row lg:items-center lg:justify-between">

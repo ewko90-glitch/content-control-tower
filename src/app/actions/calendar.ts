@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+// Prisma types not needed in this file
 import { requireRole } from "@/lib/guards";
 import { logAudit } from "@/lib/audit";
 
@@ -34,14 +35,13 @@ export async function setSchedule(
   }
 
   // Update content status and scheduledFor
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updated = await prisma.contentItem.update({
     where: { id: contentId },
     data: {
       status: "SCHEDULED",
       scheduledFor: new Date(scheduledFor),
-      scheduledById: user.id
-    } as any
+      scheduledBy: { connect: { id: user.id } }
+    }
   });
 
   // Log to audit trail
@@ -139,14 +139,13 @@ export async function unschedule(contentId: string): Promise<ScheduleState> {
   }
 
   // Update status and clear scheduledFor
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updated = await prisma.contentItem.update({
     where: { id: contentId },
     data: {
       status: "APPROVED",
       scheduledFor: null,
-      scheduledById: null
-    } as any
+      scheduledBy: { disconnect: true }
+    }
   });
 
   // Log to audit trail
@@ -159,8 +158,7 @@ export async function unschedule(contentId: string): Promise<ScheduleState> {
     before: {
       status: content.status,
       scheduledFor: content.scheduledFor,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      scheduledById: (content as any).scheduledById
+      scheduledById: content.scheduledById
     },
     after: {
       status: updated.status,

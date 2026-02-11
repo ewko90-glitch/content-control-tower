@@ -19,7 +19,7 @@ export default async function TemplatesPage() {
     createdAt: Date;
   }
 
-  const templates = await (prisma as any).contentTemplate.findMany({
+  const templates = await prisma.contentTemplate.findMany({
     where: { workspaceId },
     orderBy: { createdAt: "desc" }
   }) as ContentTemplateLocal[];

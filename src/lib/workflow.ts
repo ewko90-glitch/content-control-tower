@@ -98,6 +98,11 @@ export function canTransition(
     };
   }
 
+  // Editors can only send to approval if they are the author
+  if (nextStatus === "AWAITING_APPROVAL" && userRole === "EDITOR" && !isAuthor) {
+    return { allowed: false, reason: "Tylko autor może wysłać treść do zatwierdzenia." };
+  }
+
   return { allowed: true };
 }
 

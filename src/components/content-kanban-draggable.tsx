@@ -14,7 +14,7 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { updateContentStatus } from "@/app/actions/content";
-import { Card } from "@/components/ui/card";
+// Card was unused here
 import {
   getStatusColor,
   getStatusLabel,
@@ -240,7 +240,7 @@ interface KanbanColumnProps {
   items: ContentItemForKanban[];
   itemIds: string[];
   currentUserId: string;
-  userRole: string;
+  userRole: "OWNER" | "APPROVER" | "EDITOR";
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
   onSchedule: (id: string) => void;
@@ -294,7 +294,7 @@ function KanbanColumn({
                   key={item.id}
                   item={item}
                   currentUserId={currentUserId}
-                  userRole={userRole as any}
+                  userRole={userRole}
                   onApprove={() => onApprove(item.id)}
                   onReject={() => onReject(item.id)}
                   onSchedule={() => onSchedule(item.id)}

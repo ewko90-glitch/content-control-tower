@@ -372,11 +372,10 @@ export function CalendarBoard({
         </div>
 
         {view === "week" ? (
-          <WeekView
+            <WeekView
             weekDays={weekDays}
             eventsByDate={eventsByDate}
             draggedItem={draggedItem}
-            onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDrop={handleDropOnDate}
             onSelectItem={setSelectedContentId}
@@ -550,7 +549,6 @@ function WeekView({
   weekDays,
   eventsByDate,
   draggedItem,
-  onDragStart,
   onDragOver,
   onDrop,
   onSelectItem,
@@ -560,7 +558,6 @@ function WeekView({
   weekDays: Date[];
   eventsByDate: Record<string, (ContentItem & { createdBy?: UserPreview | null })[]>;
   draggedItem: ContentItemWithUser | null;
-  onDragStart: (item: ContentItemWithUser) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (date: Date) => void;
   onSelectItem: (id: string | null) => void;

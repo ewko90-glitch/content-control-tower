@@ -10,10 +10,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
+interface WebhookLocal {
+  id: string;
+  name: string;
+  type: string;
+  email?: string | null;
+  events: string[];
+  isActive: boolean;
+  _count?: { logs?: number };
+}
+
 export default function WebhooksPage() {
-  const [webhooks, setWebhooks] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [loading, setLoading] = useState(true);
+  const [webhooks, setWebhooks] = useState<WebhookLocal[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
@@ -108,7 +117,7 @@ export default function WebhooksPage() {
                       Events: {webhook.events.join(", ")}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {webhook._count.logs} log entries
+                      {webhook._count?.logs ?? 0} log entries
                     </p>
                   </div>
                 </div>

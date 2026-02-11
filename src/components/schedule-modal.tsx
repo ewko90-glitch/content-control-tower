@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { setSchedule } from "@/app/actions/calendar";
 
 interface ScheduleModalProps {

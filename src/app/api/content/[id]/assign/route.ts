@@ -35,9 +35,9 @@ export async function PATCH(
       );
     }
 
-    // Update assignment using type assertion to bypass Prisma typing issues
-    const oldAssignedToId = (item as any).assignedToId;
-    const updated = await (prisma as any).contentItem.update({
+    // Update assignment
+    const oldAssignedToId = item.assignedToId;
+    const updated = await prisma.contentItem.update({
       where: { id: params.id },
       data: { assignedToId }
     });

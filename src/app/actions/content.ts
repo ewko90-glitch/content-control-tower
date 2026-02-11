@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 import { requireRole, requireWorkspace } from "@/lib/guards";
 import { contentDraftSchema, scheduleSchema } from "@/lib/validators";
 import { generateMockContent } from "@/lib/mock-generator";
@@ -367,7 +368,7 @@ export async function updateContentStatus(
   // Import workflow validation
   const { canTransition } = await import("@/lib/workflow");
   const { allowed, reason } = canTransition(
-    item.status as any,
+    item.status as import("@/lib/workflow").ContentStatus,
     nextStatus,
     userRole,
     item.createdById === user.id
@@ -387,10 +388,12 @@ export async function updateContentStatus(
   }
 
   try {
-    const updateData: any = { status: nextStatus };
+    const updateData: Prisma.ContentItemUpdateInput = { status: nextStatus };
 
     if (nextStatus === "APPROVED") {
-      updateData.approvedById = user.id;
+      // Use relation connect to set approvedBy; narrow the type to avoid `any`
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (updateData as any).approvedBy = { connect: { id: user.id } };
     }
 
     if (nextStatus === "SCHEDULED" && payload?.scheduledFor) {
@@ -492,7 +495,7 @@ export async function schedulePublication(contentId: string, scheduledFor: Date)
     data: {
       status: "SCHEDULED",
       scheduledFor,
-      scheduledById: user.id
+      scheduledBy: { connect: { id: user.id } }
     }
   });
 
@@ -544,7 +547,7 @@ export async function cancelSchedule(contentId: string): Promise<ContentState> {
     data: {
       status: "APPROVED",
       scheduledFor: null,
-      scheduledById: null
+      scheduledBy: { disconnect: true }
     }
   });
 

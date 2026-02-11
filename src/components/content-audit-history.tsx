@@ -46,11 +46,15 @@ export function ContentAuditHistory({ logs }: ContentAuditHistoryProps) {
               <p className="text-xs text-gray-500 mt-0.5">
                 {log.actor?.name || log.actor?.email || "System"}
               </p>
-              {log.after && typeof log.after === "object" && "comment" in log.after && (
-                <p className="text-xs text-gray-700 mt-1 bg-gray-50 p-2 rounded border-l-2 border-l-gray-300">
-                  {(log.after as any).comment}
-                </p>
-              )}
+              {log.after && typeof log.after === "object" && (() => {
+                const after = log.after as Record<string, unknown> | null;
+                const comment = after && typeof after.comment === "string" ? after.comment : null;
+                return comment ? (
+                  <p className="text-xs text-gray-700 mt-1 bg-gray-50 p-2 rounded border-l-2 border-l-gray-300">
+                    {comment}
+                  </p>
+                ) : null;
+              })()}
               <p className="text-xs text-gray-400 mt-1">
                 {new Date(log.createdAt).toLocaleString("pl-PL")}
               </p>

@@ -1,10 +1,7 @@
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 
-// Note: webhook & webhookLog models exist in schema. Editor may show false type errors
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const webhook = (prisma as any).webhook;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const webhookLog = (prisma as any).webhookLog;
+// Note: webhook & webhookLog models exist in schema. Use Prisma client directly.
 
 export interface WebhookPayload {
   event: string;
@@ -48,7 +45,7 @@ export async function triggerWebhooks(
     }
 
     // Fetch webhooks for this event
-    const webhooks = await (prisma as any).webhook.findMany({
+    const webhooks = await prisma.webhook.findMany({
       where: {
         workspaceId,
         isActive: true,
@@ -104,14 +101,12 @@ async function sendWebhook(
   } catch (error) {
     console.error(`Failed to send ${type} webhook:`, error);
     // Log error
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (prisma as any).webhookLog.create({
+    await prisma.webhookLog.create({
       data: {
         workspaceId,
         webhookId,
         eventType: payload.event,
-        payload: payload as any,
+        payload: payload as unknown as Prisma.InputJsonValue,
         statusCode: 0,
         response: String(error)
       }
@@ -133,18 +128,16 @@ async function sendSlackWebhook(
     body: JSON.stringify({ blocks: messageBlocks })
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (prisma as any).webhookLog.create({
-    data: {
-      workspaceId,
-      webhookId,
-      eventType: payload.event,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      payload: payload as any,
-      statusCode: response.status,
-      response: await response.text()
-    }
-  });
+    await prisma.webhookLog.create({
+      data: {
+        workspaceId,
+        webhookId,
+        eventType: payload.event,
+        payload: payload as unknown as Prisma.InputJsonValue,
+        statusCode: response.status,
+        response: await response.text()
+      }
+    });
 }
 
 async function sendEmailWebhook(
@@ -162,14 +155,12 @@ async function sendEmailWebhook(
   console.log(`[Email] Subject: ${subject}`);
   console.log(`[Email] Body: ${body}`);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (prisma as any).webhookLog.create({
+  await prisma.webhookLog.create({
     data: {
       workspaceId,
       webhookId,
       eventType: payload.event,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      payload: payload as any,
+      payload: payload as unknown as Prisma.InputJsonValue,
       statusCode: 202,
       response: "Email queued for sending"
     }

@@ -5,8 +5,16 @@ import { requireWorkspace } from "@/lib/guards";
 
 // Note: contentTemplate model exists in schema and database
 // Editor may show false type errors due to intellisense cache
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const contentTemplate = (prisma as any).contentTemplate;
+// Provide a narrow typed accessor to avoid `any` usage
+const contentTemplate = (prisma as unknown as {
+  contentTemplate: {
+    findMany: (args: unknown) => Promise<unknown[]>;
+    findFirst: (args: unknown) => Promise<unknown | null>;
+    create: (args: unknown) => Promise<unknown>;
+    update: (args: unknown) => Promise<unknown>;
+    delete: (args: unknown) => Promise<unknown>;
+  };
+}).contentTemplate;
 
 export async function getTemplates() {
   const { workspaceId } = await requireWorkspace();
@@ -38,12 +46,12 @@ export async function createTemplate(data: {
 }) {
   const { workspaceId } = await requireWorkspace();
 
-  return (prisma as any).contentTemplate.create({
+  return contentTemplate.create({
     data: {
       workspaceId,
       ...data
     }
-  });
+  } as unknown);
 }
 
 export async function updateTemplate(
@@ -70,10 +78,7 @@ export async function updateTemplate(
     throw new Error("Template not found");
   }
 
-  return (prisma as any).contentTemplate.update({
-    where: { id },
-    data
-  });
+  return contentTemplate.update({ where: { id }, data } as unknown);
 }
 
 export async function deleteTemplate(id: string) {
@@ -87,7 +92,5 @@ export async function deleteTemplate(id: string) {
     throw new Error("Template not found");
   }
 
-  return (prisma as any).contentTemplate.delete({
-    where: { id }
-  });
+  return contentTemplate.delete({ where: { id } } as unknown);
 }

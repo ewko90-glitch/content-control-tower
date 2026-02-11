@@ -3,10 +3,7 @@
 import Link from "next/link";
 import { useTransition } from "react";
 import { updateContentStatus } from "@/app/actions/content";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
-  getKanbanColumn,
   getStatusColor,
   getStatusLabel,
   STATUS_GROUPS,

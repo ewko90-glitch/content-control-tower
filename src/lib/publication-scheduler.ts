@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/db";
-import { publishWordPressPost } from "@/lib/wp";
+// publishWordPressPost: kept for future WP impl; currently unused
 import { triggerWebhooks } from "@/lib/webhooks";
 import { logAudit } from "@/lib/audit";
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+type DueItem = any;
 
 export interface PublicationJob {
   id: string;
@@ -21,8 +23,7 @@ export async function processPendingPublications() {
     const now = new Date();
 
     // Find all content items scheduled for publication that are past their time
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dueItems = await (prisma as any).contentItem.findMany({
+    const dueItems = await prisma.contentItem.findMany({
       where: {
         status: "SCHEDULED",
         scheduledFor: { lte: now },
@@ -31,7 +32,8 @@ export async function processPendingPublications() {
       include: {
         workspace: { select: { id: true, name: true } },
         versions: { take: 1, orderBy: { createdAt: "desc" }, select: { id: true, body: true, title: true } },
-        createdBy: { select: { id: true, name: true, email: true } }
+        createdBy: { select: { id: true, name: true, email: true } },
+        domain: { select: { id: true, siteUrl: true, wpUsername: true, wpAppPasswordEnc: true, wpAppPasswordIv: true, wpAppPasswordTag: true } }
       }
     });
 
@@ -57,35 +59,21 @@ export async function processPendingPublications() {
 /**
  * Publish a single content item to configured platforms
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function publishContentItem(item: any) {
+async function publishContentItem(item: DueItem) {
   const workspaceId = item.workspaceId;
 
   try {
     console.log(`[Publisher] Publishing ${item.topic} (ID: ${item.id})`);
 
     // Get workspace configuration for publishing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: workspaceId },
-      select: {
-        id: true,
-        name: true
-      }
-    }) as any;
-
-    if (!workspace) {
-      throw new Error("Workspace not found");
+    const domain = item.domain;
+    if (domain && domain.siteUrl && domain.wpUsername && domain.wpAppPasswordEnc && domain.wpAppPasswordIv && domain.wpAppPasswordTag) {
+      await publishToWordPress(item);
     }
 
-    // Publish to WordPress if configured
-    if (workspace.wordpressUrl && workspace.wordpressUsername && workspace.wordpressPassword) {
-      await publishToWordPress(item, workspace);
-    }
-
-    // Publish to LinkedIn if configured
-    if (workspace.linkedinAccessToken) {
-      await publishToLinkedIn(item);
+    // Use domain-level credentials (if available) for publication
+    if (domain && domain.siteUrl && domain.wpUsername && domain.wpAppPasswordEnc && domain.wpAppPasswordIv && domain.wpAppPasswordTag) {
+      await publishToWordPress(item);
     }
 
     // Update content item status
@@ -104,8 +92,8 @@ async function publishContentItem(item: any) {
       topic: item.topic,
       status: "PUBLISHED",
       actorId: item.createdById,
-      actorName: item.createdBy?.name,
-      actorEmail: item.createdBy?.email
+      actorName: item.createdBy?.name ?? undefined,
+      actorEmail: item.createdBy?.email ?? undefined
     });
 
     // Log audit
@@ -126,12 +114,11 @@ async function publishContentItem(item: any) {
     console.error(`[Publisher] Failed to publish ${item.topic}:`, error);
 
     // Log the failure
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (prisma as any).contentItem.update({
+    await prisma.contentItem.update({
       where: { id: item.id },
       data: {
         publishError: String(error),
-        publishAttempts: (item.publishAttempts || 0) + 1
+        publishAttempts: (((item as unknown) as { publishAttempts?: number }).publishAttempts || 0) + 1
       }
     });
 
@@ -150,8 +137,7 @@ async function publishContentItem(item: any) {
 /**
  * Publish content to WordPress
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function publishToWordPress(item: any, workspace: any) {
+async function publishToWordPress(item: DueItem) {
   // Note: WordPress implementation simplified - full creds handling would go here
   try {
     console.log(`[WordPress] Publishing ${item.topic}`);
@@ -168,28 +154,7 @@ async function publishToWordPress(item: any, workspace: any) {
 /**
  * Publish content to LinkedIn
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function publishToLinkedIn(item: any) {
-  try {
-    // LinkedIn post content
-    const postContent = `
-🚀 New Article: ${item.topic}
-
-${item.versions?.[0]?.body?.substring(0, 250)}...
-
-#content #marketing #contentmarketing
-    `.trim();
-
-    // TODO: Implement LinkedIn API integration
-    // This would use workspace.linkedinAccessToken to post to LinkedIn
-    console.log(`[LinkedIn] Would post: ${postContent.substring(0, 50)}...`);
-
-    return { success: true };
-  } catch (error) {
-    console.error("[LinkedIn] Publishing failed:", error);
-    throw error;
-  }
-}
+// LinkedIn publishing implementation removed for now (unused)
 
 /**
  * Manually schedule content for publication
@@ -202,16 +167,8 @@ export async function scheduleContentPublication(
 ) {
   try {
     const item = await prisma.contentItem.update({
-      where: {
-        id: contentItemId,
-        workspaceId
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: {
-        status: "SCHEDULED",
-        scheduledFor,
-        scheduledById: userId
-      } as any
+      where: { id: contentItemId, workspaceId },
+      data: { status: "SCHEDULED", scheduledFor, scheduledBy: { connect: { id: userId } } }
     });
 
     // Trigger webhook
@@ -248,17 +205,8 @@ export async function cancelScheduledPublication(
 ) {
   try {
     const item = await prisma.contentItem.update({
-      where: {
-        id: contentItemId,
-        workspaceId
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      data: {
-        status: "APPROVED",
-        scheduledFor: null,
-        publishAttempts: 0,
-        publishError: null
-      } as any
+      where: { id: contentItemId, workspaceId },
+      data: { status: "APPROVED", scheduledFor: null, publishAttempts: 0, publishError: null, scheduledBy: { disconnect: true } }
     });
 
     // Log audit

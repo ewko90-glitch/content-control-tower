@@ -7,6 +7,7 @@ import type { ContentItem } from "@prisma/client";
 interface CalendarExportButtonProps {
   scheduledItems: ContentItem[];
   weekStart: Date;
+  weekEnd?: Date;
 }
 
 export function CalendarExportButton({

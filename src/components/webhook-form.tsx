@@ -16,10 +16,18 @@ const EVENTS = [
 
 export function WebhookForm({ webhook }: { webhook?: Record<string, unknown> }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [formData, setFormData] = useState<any>({
+
+  interface WebhookFormData {
+    name: string;
+    type: string;
+    url: string;
+    email: string;
+    events: string[];
+  }
+
+  const [formData, setFormData] = useState<WebhookFormData>({
     name: (webhook?.name as string) || "",
     type: (webhook?.type as string) || "slack",
     url: (webhook?.url as string) || "",
@@ -33,18 +41,16 @@ export function WebhookForm({ webhook }: { webhook?: Record<string, unknown> }) 
       setLoading(true);
       setError(null);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const fd = new FormData() as any;
+      const fd = new FormData();
       fd.append("name", formData.name);
       fd.append("type", formData.type);
       if (formData.url) fd.append("url", formData.url);
       if (formData.email) fd.append("email", formData.email);
-      (formData.events as string[]).forEach(e => fd.append("events", e));
+      formData.events.forEach((ev) => fd.append("events", ev));
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = webhook
-        ? await updateWebhook(webhook.id as string, fd as any)
-        : await createWebhook(fd as any);
+        ? await updateWebhook((webhook.id as string) || "", fd)
+        : await createWebhook(fd);
 
       if (result.success) {
         router.push("/settings/webhooks");
@@ -59,19 +65,15 @@ export function WebhookForm({ webhook }: { webhook?: Record<string, unknown> }) 
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function toggleEvent(event: string) {
-    setFormData((prev: any) => ({
+    setFormData((prev) => ({
       ...prev,
-      events: (prev.events as string[]).includes(event)
-        ? (prev.events as string[]).filter(e => e !== event)
-        : [...(prev.events as string[]), event]
+      events: prev.events.includes(event) ? prev.events.filter((e) => e !== event) : [...prev.events, event]
     }));
   }
 
   return (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <form onSubmit={handleSubmit as any} className="space-y-6 max-w-2xl">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       {error && (
         <div className="p-4 border border-red-200 bg-red-50 rounded">
           <p className="text-red-800">{error}</p>
