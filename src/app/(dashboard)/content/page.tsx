@@ -27,7 +27,9 @@ export default async function ContentPage({
   const items = await prisma.contentItem.findMany({
     where: {
       workspaceId,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(statusFilter !== "all" && { status: statusFilter as any }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(typeFilter !== "all" && { type: typeFilter as any }),
       ...(searchQuery && {
         OR: [
@@ -85,9 +87,7 @@ export default async function ContentPage({
 
   // Calculate stats
   const totalCount = await prisma.contentItem.count({ where: { workspaceId } });
-  const draftCount = items.filter((i) => i.status === "DRAFT").length;
   const awaitingCount = items.filter((i) => i.status === "AWAITING_APPROVAL").length;
-  const scheduledCount = items.filter((i) => i.status === "SCHEDULED").length;
 
   const showBlockersPanel =
     awaitingCount > 0 || integrationsConfigured < totalIntegrations || false;

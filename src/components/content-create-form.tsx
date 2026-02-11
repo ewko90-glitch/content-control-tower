@@ -1,27 +1,72 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useFormState } from "react-dom";
+import { useFormState, useFormStatus } from "react-dom";
 import { useTransition } from "react";
 import { createDraft } from "@/app/actions/content";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 interface FormState {
   success: boolean;
   message?: string;
 }
 
-export function ContentCreateForm() {
+interface ContentTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  topic: string;
+  mainKeyword: string;
+  type: string;
+}
+
+interface ContentCreateFormProps {
+  templates?: ContentTemplate[];
+}
+
+export function ContentCreateForm({ templates = [] }: ContentCreateFormProps) {
   const router = useRouter();
   const [state, formAction] = useFormState(createDraft, { success: false });
   const [isPending, startTransition] = useTransition();
+  
+  const [selectedTemplate, setSelectedTemplate] = useState<ContentTemplate | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    topic: "",
+    type: "",
+    mainKeyword: ""
+  });
+
+  const handleTemplateSelect = (template: ContentTemplate) => {
+    setSelectedTemplate(template);
+    setFormData({
+      topic: template.topic,
+      type: template.type,
+      mainKeyword: template.mainKeyword
+    });
+    setShowTemplates(false);
+  };
+
+  const handleClearTemplate = () => {
+    setSelectedTemplate(null);
+    setFormData({ topic: "", type: "", mainKeyword: "" });
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formDataObj = new FormData(form);
+    
+    // Add templateId if selected
+    if (selectedTemplate) {
+      formDataObj.append("templateId", selectedTemplate.id);
+    }
 
     startTransition(async () => {
-      const result = await createDraft({ success: false }, formData);
+      const result = await createDraft({ success: false }, formDataObj);
       if (result.success) {
         router.push("/content");
       }
@@ -30,6 +75,68 @@ export function ContentCreateForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Template Picker */}
+      {templates.length > 0 && (
+        <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {selectedTemplate
+                  ? `📋 Szablon: ${selectedTemplate.name}`
+                  : "📋 Użyj szablonu (opcjonalnie)"}
+              </p>
+              {selectedTemplate && (
+                <p className="text-xs text-gray-600 mt-1">
+                  {selectedTemplate.description}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowTemplates(!showTemplates)}
+                className="px-3 py-1 text-sm rounded-md bg-white border border-purple-300 hover:bg-purple-50 transition"
+              >
+                {showTemplates ? "▼" : "▶"} Szablony
+              </button>
+              {selectedTemplate && (
+                <button
+                  type="button"
+                  onClick={handleClearTemplate}
+                  className="px-3 py-1 text-sm rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          {showTemplates && (
+            <div className="mt-3 space-y-2 max-h-64 overflow-y-auto">
+              {templates.map((template) => (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => handleTemplateSelect(template)}
+                  className={`w-full text-left p-2 rounded-md transition ${
+                    selectedTemplate?.id === template.id
+                      ? "bg-purple-200 border border-purple-400"
+                      : "bg-white border border-gray-200 hover:bg-purple-50"
+                  }`}
+                >
+                  <p className="text-sm font-medium text-gray-900">
+                    {template.name}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    🔑 {template.mainKeyword}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <div>
         <label htmlFor="topic" className="block text-sm font-medium text-gray-900">
           Temat treści <span className="text-red-600">*</span>
@@ -39,6 +146,8 @@ export function ContentCreateForm() {
           name="topic"
           type="text"
           placeholder="np. Jak zoptymalizować SEO bloga"
+          value={formData.topic}
+          onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
           required
           className="mt-2 w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
@@ -54,6 +163,8 @@ export function ContentCreateForm() {
         <select
           id="type"
           name="type"
+          value={formData.type}
+          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
           required
           className="mt-2 w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
@@ -75,6 +186,8 @@ export function ContentCreateForm() {
           name="mainKeyword"
           type="text"
           placeholder="np. SEO blog"
+          value={formData.mainKeyword}
+          onChange={(e) => setFormData({ ...formData, mainKeyword: e.target.value })}
           required
           className="mt-2 w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />

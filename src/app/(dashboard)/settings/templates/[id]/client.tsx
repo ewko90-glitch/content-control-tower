@@ -8,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { updateTemplate, deleteTemplate } from "@/app/actions/templates";
 
 interface TemplateDetailPageProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   template: any;
 }
 
 export function TemplateDetailClient({ template: initialTemplate }: TemplateDetailPageProps) {
-  const [template, setTemplate] = useState(initialTemplate);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [template, _setTemplate] = useState(initialTemplate);
   const [isPending, startTransition] = useTransition();
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();

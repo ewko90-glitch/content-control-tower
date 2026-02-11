@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import type { ContentItem, ContentVersion, User } from "@prisma/client";
 import { requireWorkspace } from "@/lib/guards";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { ContentDecisionPanel } from "@/components/content-decision-panel";
 import { ContentAuditHistory } from "@/components/content-audit-history";
-import { VersionsSidebar } from "@/components/versions-sidebar";
+import { VersionTimeline, VersionCompare } from "@/components/version-timeline";
 import { AssignmentWidget } from "@/components/assignment-widget";
+import { SchedulingWidget } from "@/components/scheduling-widget";
 import { getStatusColor, getStatusLabel } from "@/lib/workflow";
 
 interface Props {
@@ -22,17 +23,16 @@ export default async function ContentDetailPage({ params }: Props) {
     where: { id: params.id, workspaceId }
   });
 
-  // Fetch relations separately due to Prisma client generation delay
-  let createdBy: any = null;
-  let approvedBy: any = null;
-  let assignedTo: any = null;
-  let versions: any[] = [];
+  let createdBy: User | null = null;
+  let approvedBy: User | null = null;
+  let assignedTo: User | null = null;
+  let versions: ContentVersion[] = [];
 
   if (item) {
     [createdBy, approvedBy, assignedTo, versions] = await Promise.all([
       item.createdById ? prisma.user.findUnique({ where: { id: item.createdById } }) : null,
       item.approvedById ? prisma.user.findUnique({ where: { id: item.approvedById } }) : null,
-      (item as any).assignedToId ? prisma.user.findUnique({ where: { id: (item as any).assignedToId } }) : null,
+      item.assignedToId ? prisma.user.findUnique({ where: { id: item.assignedToId } }) : null,
       prisma.contentVersion.findMany({
         where: { contentItemId: item.id },
         orderBy: { version: "desc" }
@@ -45,13 +45,18 @@ export default async function ContentDetailPage({ params }: Props) {
   }
 
   // Create typed item with relations
-  const itemWithRelations = {
+  const itemWithRelations: ContentItem & {
+    createdBy?: User | null;
+    approvedBy?: User | null;
+    assignedTo?: User | null;
+    versions: ContentVersion[];
+  } = {
     ...item,
     createdBy,
     approvedBy,
     assignedTo,
     versions
-  } as any;
+  };
 
   const auditLogs = await prisma.auditLog.findMany({
     where: {
@@ -211,7 +216,7 @@ export default async function ContentDetailPage({ params }: Props) {
             </Card>
           </div>
 
-          {/* Sidebar - Decision Panel + Versions + Assignment */}
+          {/* Sidebar - Decision Panel + Scheduling + Versions + Assignment */}
           <div className="space-y-6">
             <ContentDecisionPanel
               item={item}
@@ -222,10 +227,36 @@ export default async function ContentDetailPage({ params }: Props) {
               canSchedule={canSchedule}
             />
 
-            <VersionsSidebar
-              versions={itemWithRelations.versions as any[]}
-              currentVersion={itemWithRelations.versions?.[0]?.version || 1}
+            <SchedulingWidget
+              contentId={item.id}
+              status={item.status}
+              scheduledFor={item.scheduledFor}
+              onStatusChange={() => {
+                // Trigger page refresh via revalidation
+              }}
             />
+
+            {itemWithRelations.versions && itemWithRelations.versions.length > 0 && (
+              <>
+                <Card className="p-4">
+                  <VersionTimeline
+                    versions={itemWithRelations.versions}
+                    onSelectVersion={(_v) => {
+                      // Selected version will be shown in comparison
+                    }}
+                    selectedVersion={itemWithRelations.versions[0]}
+                  />
+                </Card>
+                {itemWithRelations.versions.length > 1 && (
+                  <Card className="p-4">
+                    <VersionCompare
+                      currentVersion={itemWithRelations.versions[0]}
+                      previousVersion={itemWithRelations.versions[1]}
+                    />
+                  </Card>
+                )}
+              </>
+            )}
 
             <AssignmentWidget
               contentId={item.id}

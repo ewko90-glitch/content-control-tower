@@ -62,6 +62,7 @@ model User {
   contentCreated  ContentItem[] @relation("ContentCreatedBy")
   contentApproved ContentItem[] @relation("ContentApprovedBy")
   contentAssigned ContentItem[] @relation("ContentAssignedTo")
+  contentScheduled ContentItem[] @relation("ContentScheduledBy")
 }
 
 model Workspace {
@@ -81,6 +82,8 @@ model Workspace {
   notifications Notification[]
   mediaAssets MediaAsset[] @relation("WorkspaceMediaAssets")
   publicationJobs PublicationJob[] @relation("WorkspacePublicationJobs")
+  webhooks    Webhook[]
+  webhookLogs WebhookLog[]
 }
 model Membership {
   id          String    @id @default(cuid())
@@ -181,11 +184,15 @@ model ContentItem {
   createdById    String
   approvedById   String?
   assignedToId   String?
+  scheduledById   String?
   templateId     String?
   scheduledFor   DateTime?
   publishedAt    DateTime?
   wpPostId       Int?
   wpUrl          String?
+  publishAttempts Int      @default(0)
+  publishError   String?
+  deletedAt      DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -194,6 +201,7 @@ model ContentItem {
   createdBy   User      @relation("ContentCreatedBy", fields: [createdById], references: [id])
   approvedBy  User?     @relation("ContentApprovedBy", fields: [approvedById], references: [id])
   assignedTo  User?     @relation("ContentAssignedTo", fields: [assignedToId], references: [id])
+  scheduledBy User?     @relation("ContentScheduledBy", fields: [scheduledById], references: [id])
   template    ContentTemplate? @relation(fields: [templateId], references: [id])
 
   publicationJobs PublicationJob[] @relation("ContentItemPublicationJobs")
@@ -298,4 +306,46 @@ model PublicationJob {
   contentItem   ContentItem @relation("ContentItemPublicationJobs", fields: [contentItemId], references: [id])
 
   @@index([workspaceId])
+}
+
+model Webhook {
+  id          String    @id @default(cuid())
+  workspaceId String
+  name        String
+  type        String    @db.VarChar(50)  // "slack", "email"
+  url         String?   // Slack webhook URL
+  email       String?   // Email address
+  events      String[]  // ["status_change", "approval_request", "publication"]
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+}
+
+model WebhookLog {
+  id          String    @id @default(cuid())
+  workspaceId String
+  webhookId   String
+  eventType   String
+  payload     Json
+  statusCode  Int?
+  response    String?
+  createdAt   DateTime  @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+  @@index([webhookId])
+}
+
+enum ContentStatusEvent {
+  STATUS_CHANGED
+  APPROVAL_REQUESTED
+  APPROVED
+  REJECTED
+  SCHEDULED
+  PUBLISHED
 }

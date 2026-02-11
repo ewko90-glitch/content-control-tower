@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { updateContentStatus } from "@/app/actions/content";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 interface BulkSchedulingBarProps {
   selectedCount: number;

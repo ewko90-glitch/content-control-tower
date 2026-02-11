@@ -1,12 +1,26 @@
 import Link from "next/link";
+import { prisma } from "@/lib/db";
+import { requireWorkspace } from "@/lib/guards";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { ContentCreateForm } from "@/components/content-create-form";
-import { requireRole } from "@/lib/guards";
 
 export default async function ContentNewPage() {
-  await requireRole("EDITOR");
+  const { workspaceId } = await requireWorkspace();
+
+  // Fetch templates for this workspace
+  const templates = await prisma.contentTemplate.findMany({
+    where: { workspaceId },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      topic: true,
+      mainKeyword: true,
+      type: true
+    },
+    orderBy: { createdAt: "desc" }
+  });
 
   return (
     <AppShell>
@@ -24,15 +38,18 @@ export default async function ContentNewPage() {
 
         {/* Form Card */}
         <Card className="space-y-6">
-          <ContentCreateForm />
+          <ContentCreateForm templates={templates.map(t => ({
+            ...t,
+            description: t.description || undefined
+          }))} />
         </Card>
 
         {/* Info Box */}
         <Card className="bg-blue-50 border-l-4 border-l-blue-500 space-y-3">
           <h3 className="font-semibold text-gray-900">Jak to działa</h3>
           <ol className="space-y-2 text-sm text-gray-700 list-decimal list-inside">
-            <li>Wypełnij podstawowe dane (temat, typ, słowo kluczowe)</li>
-            <li>Treść zostanie utworzona w statusie „Szkic"</li>
+            <li>Wybierz szablon (opcjonalnie) lub wypełnij dane ręcznie</li>
+            <li>Treść zostanie utworzona w statusie &quot;Szkic&quot;</li>
             <li>Możesz ją edytować, generować wersje i wysłać do zatwierdzenia</li>
             <li>Po zatwierdzeniu zaplanuj datę publikacji</li>
           </ol>

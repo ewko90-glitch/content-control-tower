@@ -457,8 +457,8 @@ export function SettingsSitesOverview({
           </div>
           <ul className="space-y-2 text-sm text-gray-600">
             <li>Dodaj osobne strony dla różnych marek lub sklepów.</li>
-            <li>Używaj statusu "Nieaktywna", gdy integracja jest tymczasowo wyłączona.</li>
-            <li>Skonfiguruj integrację, aby publikacja działała bez ręcznego kopiowania.</li>
+            <li>Używaj statusu &quot;Nieaktywna&quot;, gdy integracja jest tymczasowo wyłączona.</li>
+            <li>Skonfiguruj integrację, &quot;aby&quot; publikacja działała bez ręcznego kopiowania.</li>
           </ul>
         </Card>
         <Card className="space-y-3">

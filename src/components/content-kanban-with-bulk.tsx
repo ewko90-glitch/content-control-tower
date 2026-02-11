@@ -18,6 +18,7 @@ export function ContentKanbanWithBulk({
   userRole
 }: ContentKanbanWithBulkProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isPending, startTransition] = useTransition();
 
   const handleToggleSelect = (id: string) => {

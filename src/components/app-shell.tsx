@@ -1,8 +1,5 @@
 import Link from "next/link";
 import { ReactNode } from "react";
-import { getActiveWorkspaceId } from "@/lib/guards";
-import { prisma } from "@/lib/db";
-import { WorkspaceSwitcher } from "./workspace-switcher";
 
 const navItems = [
   { href: "/overview", label: "Przegląd" },
@@ -15,22 +12,7 @@ const navItems = [
   { href: "/inbox", label: "Do sprawdzenia" }
 ];
 
-export async function AppShell({ children }: { children: ReactNode }) {
-  const workspaceId = getActiveWorkspaceId();
-  let workspaceName = "none";
-
-  if (workspaceId) {
-    try {
-      const workspace = await prisma.workspace.findUnique({
-        where: { id: workspaceId },
-        select: { name: true }
-      });
-      workspaceName = workspace?.name ?? "unknown";
-    } catch (e) {
-      console.error("Failed to fetch active workspace name", e);
-    }
-  }
-
+export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
       <header className="border-b bg-white">
@@ -38,9 +20,8 @@ export async function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-4">
             <div>
               <p className="text-lg font-semibold">Content Control Tower</p>
-              <p className="text-xs text-gray-500">Workspace: {workspaceName}</p>
+              <p className="text-xs text-gray-500">Workspace Management</p>
             </div>
-            {workspaceId && <WorkspaceSwitcher currentWorkspaceId={workspaceId} />}
           </div>
           <nav className="flex gap-4 text-sm">
             {navItems.map((item) => (

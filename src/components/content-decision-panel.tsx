@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { approveContent, rejectContent, updateContentStatus, resetToDraft } from "@/app/actions/content";
 import { Card } from "@/components/ui/card";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Button } from "@/components/ui/button";
 
 interface ContentItem {

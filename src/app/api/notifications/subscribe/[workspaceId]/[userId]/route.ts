@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireWorkspace } from "@/lib/guards";
-import { prisma } from "@/lib/db";
+import { storeSSEConnection, removeSSEConnection } from "@/lib/notification-sse";
 
 interface RouteParams {
   workspaceId: string;
   userId: string;
 }
-
-// Map to store active SSE connections
-const activeConnections = new Map<string, ReadableStreamDefaultController>();
 
 export async function GET(
   request: NextRequest,
@@ -25,7 +22,7 @@ export async function GET(
     const stream = new ReadableStream({
       start(controller) {
         const connectionId = `${workspaceId}-${user.id}-${Date.now()}`;
-        activeConnections.set(connectionId, controller);
+        storeSSEConnection(connectionId, controller);
 
         // Send initial connection message
         controller.enqueue(
@@ -34,7 +31,7 @@ export async function GET(
 
         // Clean up on close
         request.signal.addEventListener("abort", () => {
-          activeConnections.delete(connectionId);
+          removeSSEConnection(connectionId);
           controller.close();
         });
       }
@@ -54,31 +51,5 @@ export async function GET(
       { error: "Failed to establish connection" },
       { status: 500 }
     );
-  }
-}
-
-// Helper function to broadcast notifications
-export function broadcastNotification(
-  workspaceId: string,
-  userId: string,
-  notification: {
-    id: string;
-    type: string;
-    message: string;
-    data?: unknown;
-  }
-) {
-  const connectionId = `${workspaceId}-${userId}`;
-  
-  for (const [key, controller] of activeConnections) {
-    if (key.startsWith(connectionId)) {
-      try {
-        controller.enqueue(
-          `data: ${JSON.stringify(notification)}\n\n`
-        );
-      } catch (error) {
-        activeConnections.delete(key);
-      }
-    }
   }
 }

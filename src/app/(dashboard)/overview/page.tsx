@@ -251,7 +251,7 @@ export default async function OverviewPage() {
     contentCount,
     membersCount,
     sites,
-    domainsCount,
+    _domainsCount,
     failedJobsCount,
     timelineItems
   ] = await Promise.all([

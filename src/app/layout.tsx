@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import "./globals.css";
+import "./(dashboard)/calendar/calendar-custom.css";
 
 export const metadata = {
   title: "Content Control Tower",
