@@ -96,9 +96,11 @@ export default async function ContentDetailPage({ params }: Props) {
             </h1>
           </div>
           <span
-            className={`inline-flex rounded-full px-3 py-1 text-sm font-medium flex-shrink-0 ${getStatusColor(item.status as any)}`}
+            className={`inline-flex rounded-full px-3 py-1 text-sm font-medium flex-shrink-0 ${getStatusColor(
+              item.status as ContentItem['status']
+            )}`}
           >
-            {getStatusLabel(item.status as any)}
+            {getStatusLabel(item.status as ContentItem['status'])}
           </span>
         </div>
 
@@ -126,7 +128,7 @@ export default async function ContentDetailPage({ params }: Props) {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status:</span>
                   <span className="font-medium text-gray-900">
-                    {getStatusLabel(item.status as any)}
+                    {getStatusLabel(item.status as ContentItem['status'])}
                   </span>
                 </div>
                 {itemWithRelations.approvedById && itemWithRelations.approvedBy && (
@@ -239,13 +241,13 @@ export default async function ContentDetailPage({ params }: Props) {
             {itemWithRelations.versions && itemWithRelations.versions.length > 0 && (
               <>
                 <Card className="p-4">
-                  <VersionTimeline
-                    versions={itemWithRelations.versions}
-                    onSelectVersion={(_v) => {
-                      // Selected version will be shown in comparison
-                    }}
-                    selectedVersion={itemWithRelations.versions[0]}
-                  />
+                    <VersionTimeline
+                      versions={itemWithRelations.versions}
+                      onSelectVersion={() => {
+                        // Selected version will be shown in comparison
+                      }}
+                      selectedVersion={itemWithRelations.versions[0]}
+                    />
                 </Card>
                 {itemWithRelations.versions.length > 1 && (
                   <Card className="p-4">
