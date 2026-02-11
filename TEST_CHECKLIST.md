@@ -1,3 +1,11 @@
+# Inbox Checks
+
+## Checklist
+
+- Inbox: operational inbox shows only actionable items
+- Each inbox item has single clear CTA and link to context
+- Items disappear from inbox when resolved (behavior to test)
+- Empty inbox shows calm state and CTA to overview
 # Active Workspace Selection - Test Checklist
 
 ## Manual Testing Guide
@@ -760,3 +768,198 @@ curl -X POST \
 - [ ] Jeśli nie ma stron: "Ryzyko publikacji" badge na scheduled treści
 - [ ] Draft + GENERATED trafiają do kolumny "Szkice"
 - [ ] Workflow maszyna: nie można approve przejść bezpośrednio z Draft (musi być Awaiting_Approval)
+
+---
+
+## Calendar Planning Board - Test Checklist
+
+### Prerequisites (Calendar)
+- Workspace active and selected
+- At least a few ContentItems in SCHEDULED and APPROVED status
+- User role: APPROVER or OWNER for editing permissions
+- EDITOR role for read-only verification
+
+### Test Scenarios - Calendar
+
+#### 1. Calendar Page Navigation
+- [ ] Click "Kalendarz" in left navigation
+- [ ] Verify header shows "Kalendarz publikacji"
+- [ ] Verify description: "Planuj publikacje i kontroluj obciążenie tygodnia."
+- [ ] Verify view switcher: "Tydzień" | "Miesiąc"
+- [ ] Verify date navigator: "←" "Dziś" "→" and current date range
+- [ ] Verify stats badge: "📅 Zaplanowane w tym tygodniu: X"
+
+#### 2. Week View Functionality
+- [ ] Default view is "Tydzień"
+- [ ] Verify 7 columns displayed (Monday to Sunday)
+- [ ] Verify today's column highlighted with blue border
+- [ ] Each day shows date and day name (e.g., "Pn 10")
+- [ ] Scheduled items appear in correct day column
+- [ ] Each item shows topic as truncated text with color badge
+- [ ] Click "→" to advance one week
+- [ ] Click "←" to go back one week
+- [ ] Click "Dziś" to return to current week
+- [ ] Verify date range label updates correctly
+
+#### 3. Month View Functionality
+- [ ] Click "Miesiąc" toggle
+- [ ] Verify calendar shows full month grid (6 weeks max)
+- [ ] Verify days are numbered correctly
+- [ ] Today's date has blue background
+- [ ] Each day cell shows up to 2 mini items
+- [ ] If more than 2 items in day: "+X więcej" appears
+- [ ] Click item in month view opens quick actions modal
+- [ ] Navigate to different month with "←" "→"
+- [ ] Click "Dziś" returns to current month
+
+#### 4. Backlog Panel (Right Sidebar)
+- [ ] Backlog panel shows title "Do zaplanowania"
+- [ ] Lists all APPROVED items from current workspace
+- [ ] Each backlog item shows: topic, type badge, author name
+- [ ] Backlog is scrollable if many items
+- [ ] Empty backlog shows: "Nie masz zatwierdzonych treści do zaplanowania."
+- [ ] Items stay in backlog until scheduled
+
+#### 5. Drag & Drop Scheduling (APPROVER/OWNER)
+- [ ] Drag approved item from backlog onto a day in week view
+- [ ] Verify item moves to calendar (changes status from APPROVED → SCHEDULED)
+- [ ] Verify scheduledFor is set (default 10:00 AM)
+- [ ] Verify item disappears from backlog
+- [ ] Drag scheduled item from one day to another
+- [ ] Verify scheduledFor updates to new date
+- [ ] Verify audit log records action (SCHEDULE_CONTENT / RESCHEDULE_CONTENT)
+- [ ] Drag does not work in month view (expected limitation)
+
+#### 6. Drag & Drop - Read-Only Mode (EDITOR)
+- [ ] Login as EDITOR role
+- [ ] Visit /calendar
+- [ ] Verify backlog items are NOT draggable (no cursor-grab)
+- [ ] Verify calendar days do not accept drops
+- [ ] Verify backlog items appear with reduced opacity
+- [ ] Verify no scheduling buttons visible
+
+#### 7. Quick Actions Modal
+- [ ] Click on scheduled item in week view
+- [ ] Modal opens showing: topic, type, scheduled date/time, author
+- [ ] Verify "Otwórz treść" button links to /content/[id]
+- [ ] Verify "Usuń z kalendarza" button (only for APPROVER/OWNER)
+- [ ] Click "Usuń z kalendarza"
+- [ ] Verify item returns to backlog (status → APPROVED, scheduledFor cleared)
+- [ ] Verify audit log records UNSCHEDULE_CONTENT
+- [ ] Click "Zamknij" to close modal
+- [ ] Click outside modal to close
+
+#### 8. Conflict Warnings & Overload Detection
+- [ ] Schedule 4+ items on single day
+- [ ] Verify badge appears: "⚠️ Dużo publikacji"
+- [ ] Schedule 2+ WordPress posts on same day
+- [ ] Verify badge appears: "⚠️ Ryzyko kanibalizacji"
+- [ ] Schedule 2+ LinkedIn posts on same day
+- [ ] Verify badge appears: "⚠️ Ryzyko kanibalizacji"
+- [ ] Remove items until conflicts resolve
+- [ ] Verify badges disappear
+
+#### 9. Unconfigured Sites Warning
+- [ ] If workspace has sites without credentials (wpAppPasswordEnc = null)
+- [ ] Verify yellow warning card in header: "⚠️ Niektóre strony nie są skonfigurowane"
+- [ ] Click "Skonfiguruj" button
+- [ ] Verify redirect to /settings/project/sites
+- [ ] Return to calendar after fixing sites
+- [ ] Verify warning disappears
+
+#### 10. Empty States
+- [ ] In workspace with NO scheduled and NO approved items
+- [ ] Verify empty state: "Kalendarz jest pusty."
+- [ ] Verify CTA: "Dodaj treść" button links to /content
+- [ ] Create and approve some content
+- [ ] Verify backlog panel populates
+- [ ] Schedule an item
+- [ ] Verify it appears in calendar grid
+
+#### 11. Server Actions - Schedule
+- [ ] Call setSchedule(contentId, scheduledFor) as APPROVER
+- [ ] Verify status changes APPROVED → SCHEDULED
+- [ ] Verify scheduledFor and scheduledById are set
+- [ ] Verify revalidatePath triggers for /calendar and /content
+- [ ] Verify audit log entry created with action: "schedule"
+
+#### 12. Server Actions - Reschedule
+- [ ] Call reschedule(contentId, newDate) as APPROVER
+- [ ] Verify scheduledFor updates to new date
+- [ ] Verify audit log includes before/after dates
+- [ ] Verify revalidatePath triggers
+
+#### 13. Server Actions - Unschedule
+- [ ] Call unschedule(contentId) as APPROVER
+- [ ] Verify status changes SCHEDULED → APPROVED
+- [ ] Verify scheduledFor and scheduledById cleared
+- [ ] Verify audit log records change
+- [ ] Verify revalidatePath triggers
+
+#### 14. Role-Based Access Control
+- [ ] EDITOR: Can view calendar and backlog (read-only)
+- [ ] EDITOR: Cannot drag items, cannot schedule, cannot unschedule
+- [ ] APPROVER: Can schedule, reschedule, unschedule
+- [ ] OWNER: Can do all actions
+- [ ] Server actions enforce permissions (require APPROVER+)
+- [ ] Unauthorized action returns error message
+
+#### 15. Integration with /content Page
+- [ ] Schedule item via /calendar
+- [ ] Go to /content page
+- [ ] Verify item shows status=SCHEDULED, scheduled date visible
+- [ ] Unschedule from /calendar
+- [ ] Return to /content
+- [ ] Verify item back in APPROVED column
+
+#### 16. Header CTAs
+- [ ] Verify "Zaplanuj treść" button links to /content/new
+- [ ] Verify "Przejdź do Treści" button links to /content
+- [ ] Verify warning card only appears when sites unconfigured
+
+#### 17. Visual & UX Polish
+- [ ] Week view grid is clean and readable
+- [ ] Month view grid adjusts for different month lengths
+- [ ] Backlog panel stays fixed while scrolling calendar
+- [ ] Drag feedback visible (item opacity changes during drag)
+- [ ] Modal centers properly on screen
+- [ ] Colors distinguish WP_POST (green) vs LINKEDIN_POST (blue)
+- [ ] Today's date clearly highlighted in both views
+- [ ] Conflict badges legible and attention-grabbing
+
+#### 18. Multi-Workspace Behavior
+- [ ] Schedule items in workspace A
+- [ ] Switch to workspace B
+- [ ] Verify calendar shows only workspace B items
+- [ ] Backlog shows only workspace B approved items
+- [ ] Switch back to workspace A
+- [ ] Verify workspace A calendar restored correctly
+
+#### 19. Edge Cases
+- [ ] Drag item from backlog onto past date (should still work, no date validation)
+- [ ] Rapid consecutive drags (should handle without race conditions)
+- [ ] Drag onto day that already has 5+ items (should still add, shows overload badge)
+- [ ] Month view with 6 weeks displayed (e.g., January 2026) renders correctly
+- [ ] Very long topic names truncate properly in calendar cells
+
+#### 20. Performance
+- [ ] Loading 50+ scheduled items in month view renders in < 2s
+- [ ] Switching views (week ↔ month) is instant
+- [ ] Drag operations complete smoothly without lag
+- [ ] Backlog with 20+ items scrolls smoothly
+
+#### 21. Accessibility
+- [ ] Keyboard navigation: Tab through calendar days
+- [ ] Screen reader: Date labels and item topics announced
+- [ ] Focus visible on interactive elements
+- [ ] Modal can be closed with ESC key (future improvement)
+
+### Known Limitations / Future Improvements
+- [ ] Month view drag & drop not implemented (use quick actions instead)
+- [ ] No time picker in drag operations (defaults to 10:00 AM)
+- [ ] Schedule modal component created but not integrated into backlog panel
+- [ ] Could add filters: Type (WordPress/LinkedIn), Author
+- [ ] Could add "week view with time slots" for more granular planning
+- [ ] Could add bulk scheduling from backlog panel
+- [ ] Could show publication status (PUBLISHED vs FAILED) in calendar after attempts
+
