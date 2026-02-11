@@ -3,9 +3,15 @@ const BASE = process.env.BASE_URL || 'http://localhost:3001';
 const headers = { 'Content-Type': 'application/json' };
 
 async function signin() {
-  // Use the dev-only login route which issues a NextAuth-compatible session cookie
-  const url = `${BASE}/api/dev/login`;
-  const res = await fetch(url, { method: 'GET', redirect: 'manual' });
+  // Sign in using NextAuth Credentials callback by posting form data.
+  const url = `${BASE}/api/auth/callback/credentials`;
+  const body = new URLSearchParams({ email: 'owner@demo.local', password: 'devpassword' }).toString();
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+    redirect: 'manual'
+  });
   const cookies = res.headers.get('set-cookie') || '';
   console.log('signin status', res.status);
   return cookies;
