@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireWorkspace } from "@/lib/guards";
+import type { ContentItem } from "@prisma/client";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,7 +72,7 @@ export default async function ContentPage({
   const transformedItems = items.map((item) => ({
     id: item.id,
     topic: item.topic,
-    status: item.status as any,
+    status: item.status as ContentItem['status'],
     type: item.type,
     createdById: item.createdById,
     approvedById: item.approvedById,
@@ -183,7 +184,6 @@ export default async function ContentPage({
         ) : view === "list" ? (
           <ContentList
             items={transformedItems}
-            currentUserId={user.id}
             userRole={membership.role}
           />
         ) : (

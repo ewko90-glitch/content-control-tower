@@ -222,7 +222,6 @@ export default async function ContentDetailPage({ params }: Props) {
           <div className="space-y-6">
             <ContentDecisionPanel
               item={item}
-              currentUserId={user.id}
               isAuthor={isAuthor}
               userRole={membership.role}
               canApprove={canApprove}

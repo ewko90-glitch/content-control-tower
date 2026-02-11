@@ -7,7 +7,7 @@ import { processPendingPublications } from "@/lib/publication-scheduler";
 // POST /api/cron/publish-scheduler
 // Schedule: every 5 minutes
 
-export async function POST(request: Request) {
+export async function POST() {
   // Verify cron secret if configured
   const expectedToken = process.env.CRON_SECRET;
   const authHeader = request.headers.get("authorization");
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 /**
  * Manual trigger for testing/debugging
  */
-export async function GET(request: Request) {
+export async function GET() {
   // Only allow in development
   if (process.env.NODE_ENV !== "development") {
     return new Response("Not allowed in production", { status: 403 });

@@ -18,11 +18,10 @@ interface ContentItemForList {
 
 interface ListProps {
   items: ContentItemForList[];
-  currentUserId: string;
   userRole: "OWNER" | "APPROVER" | "EDITOR";
 }
 
-export function ContentList({ items, currentUserId, userRole }: ListProps) {
+export function ContentList({ items, userRole }: ListProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
 

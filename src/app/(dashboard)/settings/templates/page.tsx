@@ -9,11 +9,20 @@ export default async function TemplatesPage() {
   const { workspaceId } = await requireWorkspace();
 
   // Note: contentTemplate model exists in schema. Editor may show false type errors
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  interface ContentTemplateLocal {
+    id: string;
+    name: string;
+    description?: string | null;
+    topic?: string | null;
+    mainKeyword?: string | null;
+    type?: string | null;
+    createdAt: Date;
+  }
+
   const templates = await (prisma as any).contentTemplate.findMany({
     where: { workspaceId },
     orderBy: { createdAt: "desc" }
-  });
+  }) as ContentTemplateLocal[];
 
   return (
     <AppShell>
@@ -67,7 +76,7 @@ export default async function TemplatesPage() {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {templates.map((template: any) => (
+            {templates.map((template) => (
               <Card
                 key={template.id}
                 className="p-4 hover:shadow-lg transition cursor-pointer group"

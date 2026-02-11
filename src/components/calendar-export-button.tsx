@@ -7,13 +7,12 @@ import type { ContentItem } from "@prisma/client";
 interface CalendarExportButtonProps {
   scheduledItems: ContentItem[];
   weekStart: Date;
-  weekEnd: Date;
 }
 
 export function CalendarExportButton({
   scheduledItems,
   weekStart,
-  weekEnd
+  
 }: CalendarExportButtonProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [exporting, setExporting] = useState(false);

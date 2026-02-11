@@ -251,7 +251,6 @@ export default async function OverviewPage() {
     contentCount,
     membersCount,
     sites,
-    _domainsCount,
     failedJobsCount,
     timelineItems
   ] = await Promise.all([
@@ -292,7 +291,6 @@ export default async function OverviewPage() {
         shopifyAccessTokenEnc: true
       }
     }),
-    prisma.domain.count({ where: { workspaceId } }),
     prisma.publicationJob.count({
       where: {
         workspaceId,

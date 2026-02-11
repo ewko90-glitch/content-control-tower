@@ -4,7 +4,6 @@ import { prisma } from "@/lib/db";
 import { requireWorkspace } from "@/lib/guards";
 import { getSeatLimitPlaceholder } from "@/lib/seat-limit";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { TeamInviteDialog } from "@/components/team-invite-dialog";
 import { TeamRemoveDialog } from "@/components/team-remove-dialog";
 

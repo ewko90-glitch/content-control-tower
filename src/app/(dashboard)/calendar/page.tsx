@@ -9,7 +9,7 @@ import { CalendarExportButton } from "@/components/calendar-export-button";
 import { CalendarStats } from "@/components/calendar-stats";
 
 export default async function CalendarPage() {
-  const { user: _user, workspaceId, membership } = await requireWorkspace();
+  const { workspaceId, membership } = await requireWorkspace();
 
   // Fetch scheduled content
   const today = new Date();

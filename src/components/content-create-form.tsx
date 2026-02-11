@@ -2,16 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormState } from "react-dom";
 import { useTransition } from "react";
 import { createDraft } from "@/app/actions/content";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 
-interface FormState {
-  success: boolean;
-  message?: string;
-}
 
 interface ContentTemplate {
   id: string;
@@ -28,7 +22,7 @@ interface ContentCreateFormProps {
 
 export function ContentCreateForm({ templates = [] }: ContentCreateFormProps) {
   const router = useRouter();
-  const [state, formAction] = useFormState(createDraft, { success: false });
+  const [state] = useFormState(createDraft, { success: false });
   const [isPending, startTransition] = useTransition();
   
   const [selectedTemplate, setSelectedTemplate] = useState<ContentTemplate | null>(null);
