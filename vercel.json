@@ -1,0 +1,6 @@
+{
+  "installCommand": "cd content-control-towerNEW && npm install",
+  "buildCommand": "cd content-control-towerNEW && npm run build",
+  "devCommand": "cd content-control-towerNEW && npm run dev",
+  "outputDirectory": "content-control-towerNEW/.next"
+}
